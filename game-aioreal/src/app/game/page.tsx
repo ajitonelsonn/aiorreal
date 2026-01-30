@@ -63,6 +63,7 @@ export default function GamePage() {
   const [rank, setRank] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
+  const [imageReady, setImageReady] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -169,9 +170,14 @@ export default function GamePage() {
     return () => clearTimeout(t);
   }, [phase, countdownNum]);
 
-  // Timer
+  // Reset imageReady when image changes
   useEffect(() => {
-    if (phase !== "playing") return;
+    if (phase === "playing") setImageReady(false);
+  }, [currentIndex]);
+
+  // Timer — only starts once image is visible
+  useEffect(() => {
+    if (phase !== "playing" || !imageReady) return;
     setTimeLeft(TIME_PER_IMAGE);
     startTimeRef.current = Date.now();
 
@@ -188,7 +194,7 @@ export default function GamePage() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [phase, currentIndex]);
+  }, [phase, currentIndex, imageReady]);
 
   // Handle answer
   const handleAnswer = useCallback(
@@ -730,14 +736,19 @@ export default function GamePage() {
                       boxShadow: "0 0 40px rgba(0,0,0,0.5)",
                     }}
                   >
-                    <Image
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={currentImage.url}
                       alt="AI or Real?"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 384px"
-                      priority
+                      onLoad={() => setImageReady(true)}
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
+                    {/* Loading indicator until image renders */}
+                    {!imageReady && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#020617]">
+                        <div className="w-8 h-8 border-3 border-white/10 border-t-[#00eeff] rounded-full animate-spin" />
+                      </div>
+                    )}
 
                     {/* Corner scan HUD */}
                     <div className="absolute top-3 left-3 w-6 h-6 pointer-events-none opacity-40">
@@ -760,7 +771,7 @@ export default function GamePage() {
                     {/* Scan label */}
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/40 backdrop-blur-sm rounded-full">
                       <span className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em]">
-                        Analyzing Image
+                        {imageReady ? "Analyzing Image" : "Loading Image..."}
                       </span>
                     </div>
 
@@ -828,7 +839,7 @@ export default function GamePage() {
                   </m.div>
 
                   {/* Answer buttons */}
-                  {phase === "playing" && (
+                  {phase === "playing" && imageReady && (
                     <div className="grid grid-cols-2 gap-3">
                       <m.button
                         whileHover={{ scale: 1.03, y: -2 }}
