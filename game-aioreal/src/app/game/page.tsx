@@ -154,7 +154,7 @@ export default function GamePage() {
       setImages(shuffled);
 
       // Preload all images into browser cache
-      await preloadImages(data.images);
+      await preloadImages(shuffled);
 
       setPhase("countdown");
       setCountdownNum(3);
