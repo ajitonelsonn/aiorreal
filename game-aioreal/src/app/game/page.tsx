@@ -96,16 +96,6 @@ export default function GamePage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showCountryDropdown]);
 
-  // Load saved credentials
-  useEffect(() => {
-    const savedName = localStorage.getItem("aioreal_username");
-    const savedCountry = localStorage.getItem("aioreal_country");
-    const savedCountrySearch = localStorage.getItem("aioreal_country_search");
-    if (savedName) setUsername(savedName);
-    if (savedCountry) setCountry(savedCountry);
-    if (savedCountrySearch) setCountrySearch(savedCountrySearch);
-  }, []);
-
   const filteredCountries = countries.filter((c) =>
     c.name.toLowerCase().includes(countrySearch.toLowerCase()),
   );
@@ -403,61 +393,136 @@ export default function GamePage() {
                   </span>
                 </Link>
 
-                <div className="glass rounded-2xl overflow-hidden glow-cyan clip-tactical">
+                <div className="glass rounded-2xl overflow-hidden glow-cyan clip-tactical relative">
+                  {/* Animated corner accents */}
+                  <div className="absolute top-0 left-0 w-24 h-24 pointer-events-none opacity-40">
+                    <m.div
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute top-0 left-0 w-16 h-[2px] bg-gradient-to-r from-[#ff4655] to-transparent"
+                    />
+                    <m.div
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                      className="absolute top-0 left-0 h-16 w-[2px] bg-gradient-to-b from-[#ff4655] to-transparent"
+                    />
+                  </div>
+                  <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none opacity-40">
+                    <m.div
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.25 }}
+                      className="absolute top-0 right-0 w-16 h-[2px] bg-gradient-to-l from-[#00eeff] to-transparent"
+                    />
+                    <m.div
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.75 }}
+                      className="absolute top-0 right-0 h-16 w-[2px] bg-gradient-to-b from-[#00eeff] to-transparent"
+                    />
+                  </div>
+
                   {/* Header gradient */}
                   <div
                     className="p-6 pb-4 text-center relative overflow-hidden"
                     style={{
                       background:
-                        "linear-gradient(135deg, rgba(255, 70, 85, 0.1), rgba(0, 238, 255, 0.1))",
+                        "linear-gradient(135deg, rgba(255, 70, 85, 0.15), rgba(0, 238, 255, 0.15))",
                     }}
                   >
-                    <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#00eeff]/5 blur-2xl" />
-                    <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-[#ff4655]/5 blur-2xl" />
+                    <m.div
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                      className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#00eeff]/20 blur-3xl"
+                    />
+                    <m.div
+                      animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.2, 0.1] }}
+                      transition={{ duration: 4, repeat: Infinity, delay: 2 }}
+                      className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-[#ff4655]/20 blur-3xl"
+                    />
                     <div className="relative z-10">
-                      <div
-                        className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 clip-skew"
+                      <m.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="inline-flex items-center gap-2 px-4 py-2 mb-4 clip-skew"
                         style={{
-                          background: "rgba(255, 70, 85, 0.1)",
-                          border: "1px solid rgba(255, 70, 85, 0.2)",
+                          background: "rgba(255, 70, 85, 0.15)",
+                          border: "1px solid rgba(255, 70, 85, 0.3)",
+                          boxShadow: "0 0 20px rgba(255, 70, 85, 0.1)",
                         }}
                       >
-                        <span className="relative flex h-1.5 w-1.5">
+                        <span className="relative flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff4655] opacity-75" />
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#ff4655]" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff4655]" />
                         </span>
-                        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#ff4655]">
+                        <span className="text-[9px] font-black uppercase tracking-[0.25em] text-[#ff4655]">
                           Player Registration
                         </span>
-                      </div>
-                      <h2 className="text-2xl font-black">Enter the Arena</h2>
-                      <p className="text-[10px] text-white/30 mt-1 font-bold uppercase tracking-wider">Can you tell AI from reality?</p>
+                      </m.div>
+                      <m.h2
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-3xl sm:text-4xl font-black mb-2"
+                      >
+                        <span className="gradient-text">Enter the Arena</span>
+                      </m.h2>
+                      <m.p
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-xs text-white/40 mt-2 font-bold uppercase tracking-wider"
+                      >
+                        Can you tell AI from reality?
+                      </m.p>
                     </div>
                   </div>
 
                   <div className="p-6 pt-4 space-y-5">
                     {/* Username */}
-                    <div>
-                      <label className="block text-[9px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">
+                    <m.div
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      <label className="block text-[10px] font-black uppercase tracking-[0.25em] text-white/50 mb-3 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-[#00eeff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                         Your Name
                       </label>
-                      <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && startGame()}
-                        placeholder="Enter your name..."
-                        maxLength={20}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-[#00eeff]/50 focus:ring-2 focus:ring-[#00eeff]/20 transition-all text-sm clip-tactical-sm"
-                      />
-                    </div>
+                      <div className="relative group">
+                        <input
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && startGame()}
+                          placeholder="Enter your name..."
+                          maxLength={20}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-4 text-white placeholder-white/20 focus:outline-none focus:border-[#00eeff]/60 focus:ring-2 focus:ring-[#00eeff]/30 transition-all text-sm clip-tactical-sm hover:bg-white/8 hover:border-white/20"
+                          style={{
+                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
+                        <div className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" style={{
+                          background: "linear-gradient(135deg, rgba(0, 238, 255, 0.05), transparent)",
+                        }} />
+                      </div>
+                    </m.div>
 
                     {/* Country - searchable dropdown */}
-                    <div ref={countryDropdownRef}>
-                      <label className="block text-[9px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">
-                        Country
+                    <m.div
+                      ref={countryDropdownRef}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                    >
+                      <label className="block text-[10px] font-black uppercase tracking-[0.25em] text-white/50 mb-3 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-[#ff4655]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Country (Optional)
                       </label>
-                      <div className="relative">
+                      <div className="relative group">
                         <input
                           type="text"
                           value={countrySearch}
@@ -467,103 +532,154 @@ export default function GamePage() {
                           }}
                           onFocus={() => setShowCountryDropdown(true)}
                           placeholder="Search country..."
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-[#00eeff]/50 focus:ring-2 focus:ring-[#00eeff]/20 transition-all text-sm clip-tactical-sm"
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-4 text-white placeholder-white/20 focus:outline-none focus:border-[#ff4655]/60 focus:ring-2 focus:ring-[#ff4655]/30 transition-all text-sm clip-tactical-sm hover:bg-white/8 hover:border-white/20"
+                          style={{
+                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+                          }}
                         />
                         {country && (
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg">
+                          <m.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-xl"
+                          >
                             {countries.find((c) => c.name === country)?.flag}
-                          </span>
+                          </m.span>
                         )}
+                        <div className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" style={{
+                          background: "linear-gradient(135deg, rgba(255, 70, 85, 0.05), transparent)",
+                        }} />
 
                         {showCountryDropdown && (
-                          <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-[#0f172a] border border-white/10 rounded-lg shadow-2xl">
+                          <m.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute z-50 mt-2 w-full max-h-48 overflow-y-auto bg-[#0f172a]/95 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl clip-tactical-sm"
+                            style={{
+                              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
+                            }}
+                          >
                             {filteredCountries.length === 0 ? (
-                              <div className="px-4 py-3 text-xs text-white/30">
+                              <div className="px-4 py-3 text-xs text-white/30 text-center">
                                 No countries found
                               </div>
                             ) : (
-                              filteredCountries.map((c) => (
-                                <button
+                              filteredCountries.map((c, idx) => (
+                                <m.button
                                   key={c.code}
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: idx * 0.02 }}
                                   type="button"
                                   onClick={() => selectCountry(c)}
-                                  className={`w-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/5 transition-colors text-left cursor-pointer ${country === c.name ? "bg-[#00eeff]/10" : ""}`}
+                                  className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all text-left cursor-pointer border-b border-white/5 last:border-0 ${country === c.name ? "bg-[#00eeff]/15 border-l-2 border-l-[#00eeff]" : ""}`}
                                 >
-                                  <span className="text-base">{c.flag}</span>
-                                  <span className="text-sm text-white/80">
+                                  <span className="text-lg">{c.flag}</span>
+                                  <span className="text-sm text-white/90 font-medium">
                                     {c.name}
                                   </span>
-                                  <span className="text-[10px] text-white/30 ml-auto font-bold">
+                                  <span className="text-[10px] text-white/30 ml-auto font-bold uppercase">
                                     {c.code}
                                   </span>
-                                </button>
+                                </m.button>
                               ))
                             )}
-                          </div>
+                          </m.div>
                         )}
                       </div>
-                    </div>
+                    </m.div>
 
                     {/* Start button */}
                     <m.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                      whileHover={{ scale: username.trim() ? 1.03 : 1, y: username.trim() ? -2 : 0 }}
+                      whileTap={{ scale: username.trim() ? 0.97 : 1 }}
                       onClick={startGame}
                       disabled={!username.trim()}
-                      className="w-full py-4 font-black uppercase tracking-[0.15em] text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer clip-skew overflow-hidden relative"
+                      className="w-full py-5 font-black uppercase tracking-[0.15em] text-base transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer clip-skew overflow-hidden relative group"
                       style={{
                         background: username.trim()
                           ? "linear-gradient(135deg, #ff4655, #00eeff)"
                           : "rgba(255,255,255,0.05)",
                         boxShadow: username.trim()
-                          ? "0 0 30px rgba(255, 70, 85, 0.2)"
+                          ? "0 0 40px rgba(255, 70, 85, 0.3), 0 0 60px rgba(0, 238, 255, 0.2)"
                           : "none",
                       }}
                     >
                       {username.trim() && (
-                        <m.div
-                          animate={{ x: ["-100%", "200%"] }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "linear",
-                          }}
-                          className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-                        />
+                        <>
+                          <m.div
+                            animate={{ x: ["-100%", "200%"] }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
+                            className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"
+                          />
+                          <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors pointer-events-none" />
+                        </>
                       )}
-                      <span className="relative z-10">Start Game</span>
+                      <span className="relative z-10 flex items-center justify-center gap-3">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Start Game
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </span>
                     </m.button>
                   </div>
 
                   {/* Game info */}
                   <div className="px-6 pb-6 pt-2">
-                    <div className="border-t border-white/5 pt-4">
-                      <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="border-t border-white/10 pt-5">
+                      <m.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7 }}
+                        className="grid grid-cols-3 gap-4 text-center"
+                      >
                         {[
-                          { v: "12", l: "Images", c: "#00eeff" },
-                          { v: "5s", l: "Per Image", c: "#ff4655" },
-                          { v: "2", l: "Choices", c: "#10b981" },
-                        ].map((s) => (
-                          <div
+                          { v: "12", l: "Images", c: "#00eeff", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
+                          { v: "5s", l: "Per Image", c: "#ff4655", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
+                          { v: "2", l: "Choices", c: "#10b981", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
+                        ].map((s, idx) => (
+                          <m.div
                             key={s.l}
-                            className="clip-tactical-sm p-2.5"
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.7 + idx * 0.1 }}
+                            whileHover={{ scale: 1.05, y: -3 }}
+                            className="clip-tactical-sm p-4 relative overflow-hidden group cursor-default"
                             style={{
-                              background: `${s.c}08`,
-                              border: `1px solid ${s.c}20`,
+                              background: `linear-gradient(135deg, ${s.c}12, ${s.c}05)`,
+                              border: `1px solid ${s.c}30`,
+                              boxShadow: `0 4px 15px ${s.c}10`,
                             }}
                           >
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
+                              background: `linear-gradient(135deg, ${s.c}08, transparent)`,
+                            }} />
+                            <svg className="w-5 h-5 mx-auto mb-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke={s.c}>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={s.icon} />
+                            </svg>
                             <div
-                              className="text-lg font-black"
+                              className="text-2xl font-black mb-1"
                               style={{ color: s.c }}
                             >
                               {s.v}
                             </div>
-                            <div className="text-[8px] text-white/30 font-black uppercase tracking-wider">
+                            <div className="text-[9px] text-white/40 font-black uppercase tracking-wider">
                               {s.l}
                             </div>
-                          </div>
+                          </m.div>
                         ))}
-                      </div>
+                      </m.div>
                     </div>
                   </div>
                 </div>
@@ -957,37 +1073,42 @@ export default function GamePage() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 }}
-                      className="grid grid-cols-2 gap-3"
+                      className="grid grid-cols-2 gap-4"
                     >
                       <m.button
-                        whileHover={{ scale: 1.04, y: -3 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.06, y: -5 }}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => {
                           playClick();
                           handleAnswer(true);
                         }}
-                        className="py-5 font-black uppercase tracking-[0.1em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
+                        className="py-6 font-black uppercase tracking-[0.12em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
                         style={{
                           background:
-                            "linear-gradient(135deg, rgba(255, 70, 85, 0.12), rgba(255, 70, 85, 0.05))",
-                          border: "1px solid rgba(255, 70, 85, 0.3)",
+                            "linear-gradient(135deg, rgba(255, 70, 85, 0.18), rgba(255, 70, 85, 0.08))",
+                          border: "2px solid rgba(255, 70, 85, 0.4)",
                           color: "#ff4655",
-                          boxShadow: "0 0 20px rgba(255, 70, 85, 0.08)",
+                          boxShadow: "0 4px 25px rgba(255, 70, 85, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                         }}
                       >
                         <m.div
                           animate={{ x: ["-100%", "200%"] }}
                           transition={{
-                            duration: 3,
+                            duration: 2.5,
                             repeat: Infinity,
                             ease: "linear",
                           }}
-                          className="absolute inset-y-0 w-1/4 bg-gradient-to-r from-transparent via-[#ff4655]/10 to-transparent pointer-events-none"
+                          className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-[#ff4655]/20 to-transparent pointer-events-none"
                         />
-                        <div className="absolute inset-0 bg-[#ff4655]/0 group-hover:bg-[#ff4655]/5 transition-colors pointer-events-none" />
-                        <span className="relative z-10 flex items-center justify-center gap-2">
+                        <div className="absolute inset-0 bg-[#ff4655]/0 group-hover:bg-[#ff4655]/10 transition-colors pointer-events-none" />
+                        <m.div
+                          animate={{ opacity: [0.3, 0.6, 0.3] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#ff4655] to-transparent opacity-50"
+                        />
+                        <span className="relative z-10 flex flex-col items-center justify-center gap-2">
                           <svg
-                            className="w-5 h-5"
+                            className="w-7 h-7"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -995,44 +1116,48 @@ export default function GamePage() {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={2.5}
                               d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                             />
                           </svg>
-                          AI Generated
+                          <span>AI Generated</span>
                         </span>
                       </m.button>
 
                       <m.button
-                        whileHover={{ scale: 1.04, y: -3 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.06, y: -5 }}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => {
                           playClick();
                           handleAnswer(false);
                         }}
-                        className="py-5 font-black uppercase tracking-[0.1em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
+                        className="py-6 font-black uppercase tracking-[0.12em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
                         style={{
                           background:
-                            "linear-gradient(135deg, rgba(0, 238, 255, 0.12), rgba(0, 238, 255, 0.05))",
-                          border: "1px solid rgba(0, 238, 255, 0.3)",
+                            "linear-gradient(135deg, rgba(0, 238, 255, 0.18), rgba(0, 238, 255, 0.08))",
+                          border: "2px solid rgba(0, 238, 255, 0.4)",
                           color: "#00eeff",
-                          boxShadow: "0 0 20px rgba(0, 238, 255, 0.08)",
+                          boxShadow: "0 4px 25px rgba(0, 238, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                         }}
                       >
                         <m.div
                           animate={{ x: ["-100%", "200%"] }}
                           transition={{
-                            duration: 3,
+                            duration: 2.5,
                             repeat: Infinity,
                             ease: "linear",
-                            delay: 1.5,
                           }}
-                          className="absolute inset-y-0 w-1/4 bg-gradient-to-r from-transparent via-[#00eeff]/10 to-transparent pointer-events-none"
+                          className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-[#00eeff]/20 to-transparent pointer-events-none"
                         />
-                        <div className="absolute inset-0 bg-[#00eeff]/0 group-hover:bg-[#00eeff]/5 transition-colors pointer-events-none" />
-                        <span className="relative z-10 flex items-center justify-center gap-2">
+                        <div className="absolute inset-0 bg-[#00eeff]/0 group-hover:bg-[#00eeff]/10 transition-colors pointer-events-none" />
+                        <m.div
+                          animate={{ opacity: [0.3, 0.6, 0.3] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                          className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#00eeff] to-transparent opacity-50"
+                        />
+                        <span className="relative z-10 flex flex-col items-center justify-center gap-2">
                           <svg
-                            className="w-5 h-5"
+                            className="w-7 h-7"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1040,17 +1165,17 @@ export default function GamePage() {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={2.5}
                               d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
                             />
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={2.5}
                               d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                             />
                           </svg>
-                          Real Photo
+                          <span>Real Photo</span>
                         </span>
                       </m.button>
                     </m.div>
