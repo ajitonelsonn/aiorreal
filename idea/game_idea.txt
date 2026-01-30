@@ -1,0 +1,18 @@
+I want to make a game for this hackthon in category 4 for idea/hackthon.txt this hackathon.
+The game will be a 2D platformer. and the gema name is 'ai or real' and the domain name is 'aioreal.fun', the game will just a simple
+so you the image is will show and user just will play just use mouse to sellect this is ai image or not.
+
+so in here we have 20 image that on aws s3 bucket, you can see all image path in here idea/ai_image_description.txt and idea/not_ai_image_description.txt.
+and for the next how the game will work. the first we have landing poage and we have a button to play the game, so the first will ask user to put theyr name and sellect the country, and play the game,
+so what technology we will use for this game. we  will use next.js so you can get some refence on here : /Users/ajitonelsonluciodacosta/Documents/Sky_the_Limit/junie-arcade/package.json and also some landing page in here junie-arcade/app/page.tsx
+and user will play the game on browser. so we can use parser for build the game, so the firsty will load the image from aws s3 it already finish will start the game, so it will randomly 12 select the image and show it to user. so every image we just have 5 second for each image, so how faster you are and the when the the game is finish will have result card
+you can see reference in here /Users/ajitonelsonluciodacosta/Documents/Sky_the_Limit/junie-arcade/app/components/GameOverCard.tsx. and for all .env for database and aws s3 in here idea/.env so you can use this.
+for database we will use postgres and reference is for create database and push to cloud we can use prisma example is in here /Users/ajitonelsonluciodacosta/Documents/Sky_the_Limit/junie-arcade/prisma, and some variation and sound you can get from here /Users/ajitonelsonluciodacosta/Documents/Sky_the_Limit/junie-arcade/public/assets/sounds and junie-arcade/public/assets/images/backgrounds junie-arcade/public/assets/images/logos junie-arcade/public/assets/images/hero
+
+
+SO now your task is to make a game for this hackthon. and analize the database and create it and then create the best ui and ux game and base on this hackathon /Users/ajitonelsonluciodacosta/Documents/aiorreal/idea/hackthon.txt
+remember that all image path will put in database and analize this image file to understand what table you will create.
+
+you will create the game in this folder /Users/ajitonelsonluciodacosta/Documents/aiorreal and the name of the project is game-aioreal
+so please start it create the next js project now.
+

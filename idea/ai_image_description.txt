@@ -1,0 +1,132 @@
+---1,2
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. No real photo, screenshot, or human photography was used — it's 100% synthetic and generated from scratch using a text-to-image AI model.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"someone intensely playing Valorant, first-person view over the shoulder, large curved gaming monitor showing Valorant gameplay with Jett or Reyna agent in action, Bind or Haven map visible, RGB keyboard and mouse lighting, dark cozy gaming room at night, realistic lighting, high detail, cinematic atmosphere"
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/277c0849-185c-4630-8a8e-843549fc9e79.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/b621b729-ff94-496c-8156-684607dd007d.jpg
+
+---3,4
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. No real photograph, no screenshot from an actual game session, and no human camera was involved — it's 100% AI-generated from text description alone.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"someone intensely playing League of Legends, over-the-shoulder first-person view of a gamer at their desk, ultra-wide curved gaming monitor displaying an epic team fight on Summoner's Rift, champions like Yasuo, Ahri, or Sett in action with skill effects and particles flying, health bars and minimap visible, RGB-lit mechanical keyboard and gaming mouse glowing, dark cozy gaming setup at night with blue and purple LED strips, focused expression on the player, high detail, cinematic lighting, realistic shadows, atmospheric mood"
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/7398cc83-b013-4f21-ad9a-6fa3ac69e351.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/ee09bd43-c058-403f-b8c1-cf713a35bf58.jpg
+
+---5,6
+**Why this was generated from AI:**  
+This image was created 100% by artificial intelligence. It's not a real photograph from an actual Valorant tournament, not an official broadcast screenshot, and no camera captured it — the entire scene (players, monitors, crowd, lighting, everything) was synthesized from text description using AI image generation.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"professional Valorant esports event in a large dark arena, multiple pro players at gaming stations intensely focused on playing Valorant, over-the-shoulder and side views of players, many large curved ultrawide monitors displaying simultaneous Valorant gameplay with different agents like Jett dashing, Phoenix flashing, Omen teleporting, Reyna ulting, various maps visible (Bind, Haven, Ascent, Icebox), RGB-lit mechanical keyboards and mice glowing in team colors, huge cheering crowd in the background waving flags and signs, tournament stage lighting with spotlights and sponsor banners, dramatic cinematic atmosphere, high detail, realistic shadows and reflections, epic competitive gaming vibe"
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/ae190ee1-4e06-4a68-a438-582e9323d5b6.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/07e95886-079c-405a-807b-e21c9bd3cc03.jpg
+
+---7,8
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. It is not a real photograph of any actual person, not taken with a camera, and not based on any real individual — the face, skin details, lighting, and every feature were synthesized from scratch using only a text description.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"extremely detailed realistic human face, young woman with flawless smooth skin, striking golden-brown hazel eyes with sharp catchlights, long dark lashes, perfectly shaped natural eyebrows, high cheekbones, subtle natural makeup glow, soft full lips with gentle shine, dramatic cinematic studio lighting with soft rim light and subtle shadows, shallow depth of field, hyper-realistic skin pores and micro-textures, professional portrait photography quality, symmetrical beautiful features, intense yet serene expression, 8k resolution, photorealistic, masterpiece"
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/0dd36f0e-378e-47e2-8f26-522c9b7effb9.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/bd0663f2-c30c-4dab-ba0c-6a6516dd7e8b.jpg
+
+---9,10
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. It depicts no real people, was not photographed with any camera, and is not based on any actual couple or moment — every detail (faces, expressions, lighting, embrace, background) was synthetically generated from a text description alone.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"romantic couple, handsome man and beautiful woman in a tender embrace, foreheads touching, eyes closed in intimate moment, soft warm cinematic lighting at dusk, cozy outdoor setting with blurred garden and string lights in background, man wearing dark button-up shirt, woman in light flowing dress, long wavy hair, gentle affectionate expressions, high detail skin textures, realistic hair strands, dramatic rim lighting and soft bokeh, emotional connection and love captured, photorealistic, 8k resolution, masterpiece portrait style"
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/c9af094c-0430-40cc-8885-dde4b20a88e4.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/8664a3e4-abb6-43d7-8eab-a662d012238e.jpg
+
+---11,12
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. It is not a real photograph taken with a camera, not a stock photo of an actual rose, and shows no real flower — every petal, dew drop, lighting effect, color vibrancy, and background detail was synthetically generated from a text description alone.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"A vibrant red rose in full bloom, perfectly symmetrical petals with rich crimson color gradients from deep red to bright scarlet, fresh dew drops glistening on every petal catching soft morning sunlight, delicate water droplets with realistic refraction and highlights, gentle golden hour morning light filtering through, soft bokeh background with blurred green leaves and hints of other roses in purple and pink tones, three additional roses visible in the background slightly out of focus, macro close-up photography style, hyper-detailed textures, natural outdoor garden setting after light rain, cinematic depth of field, photorealistic, 8k resolution, masterpiece botanical photography"
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/8eba85f9-09a9-4055-ac12-9eecbfc75366.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/66f5038c-a6da-4596-8e73-dbf516a8bee9.jpg
+
+---13,14
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. It is not a real photograph of any actual house, not taken with a drone/camera, and not pulled from real estate listings — the entire building, materials, lighting, landscaping, palm trees, sky, and every architectural detail were synthetically generated from a text description alone.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"modern minimalist two-story concrete house with clean geometric lines, large floor-to-ceiling glass windows, wooden front door, second-floor balcony with metal railing, palm trees surrounding the property, bright blue sky with scattered clouds, warm sunny daylight, concrete pathway leading to entrance, lush green plants and small garden bed, suburban or coastal residential setting, photorealistic architectural photography, high detail textures on concrete and wood, natural shadows and reflections on glass, professional real estate photo style, 8k resolution, cinematic composition"
+
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/47695132-b899-47bf-8743-f1fd101b0acd.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/930c74ea-1099-413d-86ae-aa7d0ffa34da.jpg
+
+---15,16
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. It does not depict any real soldier, real battlefield, or actual war event — no photograph was taken, no real person was involved, and no historical or current footage was used. Every element (face, expression, uniform, dirt, smoke, fire, lighting, emotion) was synthetically generated from text alone.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"soldier in intense modern warfare, highly detailed realistic portrait, battle-worn face covered in dirt, sweat and camouflage paint, determined and fierce expression with wide eyes, wearing tactical helmet and body armor, smoke and explosions in the blurred background at dusk, dramatic orange fire glow and cinematic lighting, dynamic action pose charging forward, mud and debris on uniform, sense of urgency and adrenaline, photorealistic military photography style, high resolution textures on fabric and skin, shallow depth of field, 8k quality, epic war movie atmosphere"
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/25b79bac-bb03-4323-95db-a5cfd9d30a24.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/8ee64084-f924-40aa-8c9d-09b84e22830d.jpg
+
+
+---17,18
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. It is not a real photograph of any actual private jet interior, not taken during a flight, and not sourced from any aviation company or luxury charter service — every detail (leather seats, wood finishes, ambient lighting, windows, champagne glasses, curvature of the cabin, sunset view) was synthetically generated from a text description alone.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"luxurious private jet interior, ultra-premium cabin of a Gulfstream or Bombardier-style business jet, plush quilted tan and brown leather recliner seats with diamond stitching, polished dark walnut wood trim and accents, soft teal and warm amber LED ambient mood lighting along the ceiling and side panels, large oval windows showing a golden sunset over the ocean, two crystal champagne flutes with bubbling prosecco on a side table, spacious and elegant layout with forward-facing seats and a small conference area in the background, high-end aviation design, photorealistic details on textures and reflections, cinematic warm lighting, shallow depth of field, professional luxury lifestyle photography style, 8k resolution, ultra-detailed"
+
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/68c10a92-85d6-4b4f-8ca3-8865475efa80.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/aea71934-316a-45d4-a667-992765ea37a7.jpg
+
+---19,20
+**Why this was generated from AI:**  
+This image was created entirely by artificial intelligence. It is not a real photograph captured in any actual forest, not taken with a camera during a hike or nature shoot, and shows no real location — every tree, beam of light, mist, foliage, ground cover, and atmospheric effect was synthetically generated from a text description alone.
+
+**Used what to generate:**  
+Grok's built-in image generation model (powered by Flux)
+
+**Prompt:**  
+"dense ancient forest with tall evergreen trees like fir and spruce, soft golden sunlight rays piercing through the thick canopy creating god rays and volumetric fog, misty morning atmosphere after light rain, lush green ferns and moss covering the forest floor, fallen logs and rocks scattered around, subtle wildlife elements like a distant deer and birds in the branches, narrow path winding through the trees leading to a small clearing with a stream, tranquil and immersive natural environment, photorealistic nature photography, cinematic depth of field with foreground bokeh, rich textures on bark and leaves, warm and cool tones balanced, 8k resolution, masterpiece landscape"
+
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/48bfbec2-b6a8-46b4-9228-e4c69c6d25fd.jpg
+https://s3.us-east-1.amazonaws.com/aiorreal.fun/ai_image/61387c12-bff3-45d9-8d37-cfedd92c6812.jpg
