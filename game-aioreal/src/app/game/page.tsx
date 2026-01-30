@@ -318,6 +318,22 @@ export default function GamePage() {
     }
   }, [phase]);
 
+  // Keyboard shortcuts during gameplay
+  useEffect(() => {
+    if (phase !== "playing" || !imageReady) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "a" || e.key === "A" || e.key === "1" || e.key === "ArrowLeft") {
+        playClick();
+        handleAnswer(true);
+      } else if (e.key === "r" || e.key === "R" || e.key === "2" || e.key === "ArrowRight") {
+        playClick();
+        handleAnswer(false);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [phase, imageReady, handleAnswer]);
+
   const currentImage = images[currentIndex];
   const progress =
     ((currentIndex + (phase === "feedback" ? 1 : 0)) / images.length) * 100;
@@ -976,6 +992,25 @@ export default function GamePage() {
                     </div>
                   </div>
 
+                  {/* Mini results dots */}
+                  {results.length > 0 && (
+                    <div className="flex items-center gap-1 mb-2">
+                      {results.map((r, i) => (
+                        <div
+                          key={i}
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: r.correct ? "#10b981" : "#ff4655" }}
+                        />
+                      ))}
+                      {Array.from({ length: images.length - results.length }).map((_, i) => (
+                        <div
+                          key={`empty-${i}`}
+                          className="w-1.5 h-1.5 rounded-full bg-white/10"
+                        />
+                      ))}
+                    </div>
+                  )}
+
                   {/* Progress bar */}
                   <div className="h-1 bg-white/5 rounded-full overflow-hidden mb-2">
                     <m.div
@@ -1326,6 +1361,13 @@ export default function GamePage() {
                       </m.button>
                     </m.div>
                   )}
+
+                  {/* Keyboard hint */}
+                  {phase === "playing" && imageReady && (
+                    <p className="text-center text-[8px] text-white/15 font-bold uppercase tracking-widest mt-2">
+                      Press A or ← for AI &nbsp;·&nbsp; R or → for Real
+                    </p>
+                  )}
                 </div>
               </div>
             </m.div>
@@ -1349,15 +1391,12 @@ export default function GamePage() {
                 isSaving={isSaving}
                 onPlayAgain={() => {
                   playClick();
-                  // Clear form fields
                   setUsername("");
                   setCountry("");
                   setCountrySearch("");
-                  // Clear localStorage
                   localStorage.removeItem("aioreal_username");
                   localStorage.removeItem("aioreal_country");
                   localStorage.removeItem("aioreal_country_search");
-                  // Reset game state
                   setPhase("register");
                   setCurrentIndex(0);
                   setResults([]);
