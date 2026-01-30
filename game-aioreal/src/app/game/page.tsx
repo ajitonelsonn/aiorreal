@@ -115,26 +115,6 @@ export default function GamePage() {
     playClick();
   };
 
-  // Preload all images into browser cache
-  const preloadImages = (imageList: GameImage[]): Promise<void> => {
-    let loaded = 0;
-    return new Promise((resolve) => {
-      if (imageList.length === 0) {
-        resolve();
-        return;
-      }
-      imageList.forEach((img) => {
-        const image = new window.Image();
-        image.onload = image.onerror = () => {
-          loaded++;
-          setLoadProgress(Math.round((loaded / imageList.length) * 100));
-          if (loaded >= imageList.length) resolve();
-        };
-        image.src = img.url;
-      });
-    });
-  };
-
   // Start game
   const startGame = async () => {
     if (!username.trim()) return;
@@ -153,13 +133,74 @@ export default function GamePage() {
       const shuffled = [...data.images].sort(() => Math.random() - 0.5);
       setImages(shuffled);
 
-      // Preload all images into browser cache
-      await preloadImages(shuffled);
+      // Preload both images and audio with combined progress tracking
+      const totalAssets = shuffled.length + 12; // 12 images + 12 audio files
+      let loadedAssets = 0;
+
+      const updateProgress = () => {
+        loadedAssets++;
+        setLoadProgress(Math.round((loadedAssets / totalAssets) * 100));
+      };
+
+      // Preload images with progress tracking
+      const imagePromise = new Promise<void>((resolve) => {
+        if (shuffled.length === 0) {
+          resolve();
+          return;
+        }
+        let loaded = 0;
+        shuffled.forEach((img) => {
+          const image = new window.Image();
+          image.onload = image.onerror = () => {
+            loaded++;
+            updateProgress();
+            if (loaded >= shuffled.length) resolve();
+          };
+          image.src = img.url;
+        });
+      });
+
+      // Preload audio with progress tracking
+      const audioFiles = [
+        "/assets/sounds/music/music-game.mp3",
+        "/assets/sounds/music/music-victory.mp3",
+        "/assets/sounds/sfx/click.mp3",
+        "/assets/sounds/sfx/coin.mp3",
+        "/assets/sounds/sfx/error.mp3",
+        "/assets/sounds/sfx/explosion.mp3",
+        "/assets/sounds/sfx/gameover.mp3",
+        "/assets/sounds/sfx/jump.mp3",
+        "/assets/sounds/sfx/pop.mp3",
+        "/assets/sounds/sfx/success.mp3",
+        "/assets/sounds/sfx/victory.mp3",
+        "/assets/sounds/sfx/whoosh.mp3",
+      ];
+
+      const audioPromise = new Promise<void>((resolve) => {
+        if (audioFiles.length === 0) {
+          resolve();
+          return;
+        }
+        let loaded = 0;
+        audioFiles.forEach((src) => {
+          const audio = new Audio();
+          audio.preload = "auto";
+          audio.oncanplaythrough = audio.onerror = () => {
+            loaded++;
+            updateProgress();
+            if (loaded >= audioFiles.length) resolve();
+          };
+          audio.src = src;
+        });
+      });
+
+      // Wait for both images and audio to finish loading
+      await Promise.all([imagePromise, audioPromise]);
 
       setPhase("countdown");
       setCountdownNum(3);
     } catch (err) {
-      console.error("Failed to load images:", err);
+      console.error("Failed to load assets:", err);
       setPhase("register");
     }
   };
