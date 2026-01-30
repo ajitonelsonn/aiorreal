@@ -33,40 +33,51 @@ export default function LeaderboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [newEntryIndex, setNewEntryIndex] = useState<number | null>(null);
 
-  const fetchData = useCallback(async (isInitial = false) => {
-    if (!isInitial) setIsRefreshing(true);
-    try {
-      const [lbRes, coRes] = await Promise.all([
-        fetch("/api/leaderboard"),
-        isInitial ? fetch("/api/countries") : Promise.resolve(null),
-      ]);
-      const lb = await lbRes.json();
-      if (coRes) {
-        const co = await coRes.json();
-        setCountries(Array.isArray(co) ? co : []);
-      }
-
-      const newEntries: LeaderboardEntry[] = lb.leaderboard || [];
-
-      // Detect new entries by comparing with previous
-      if (!isInitial && entries.length > 0 && newEntries.length > entries.length) {
-        // Find first new entry
-        const prevUsernames = new Set(entries.map(e => `${e.username}-${e.createdAt}`));
-        const idx = newEntries.findIndex(e => !prevUsernames.has(`${e.username}-${e.createdAt}`));
-        if (idx >= 0) {
-          setNewEntryIndex(idx);
-          setTimeout(() => setNewEntryIndex(null), 3000);
+  const fetchData = useCallback(
+    async (isInitial = false) => {
+      if (!isInitial) setIsRefreshing(true);
+      try {
+        const [lbRes, coRes] = await Promise.all([
+          fetch("/api/leaderboard"),
+          isInitial ? fetch("/api/countries") : Promise.resolve(null),
+        ]);
+        const lb = await lbRes.json();
+        if (coRes) {
+          const co = await coRes.json();
+          setCountries(Array.isArray(co) ? co : []);
         }
-      }
 
-      setEntries(newEntries);
-      setLastUpdated(new Date());
-      if (isInitial) setLoading(false);
-    } catch {
-      if (isInitial) setLoading(false);
-    }
-    setIsRefreshing(false);
-  }, [entries]);
+        const newEntries: LeaderboardEntry[] = lb.leaderboard || [];
+
+        // Detect new entries by comparing with previous
+        if (
+          !isInitial &&
+          entries.length > 0 &&
+          newEntries.length > entries.length
+        ) {
+          // Find first new entry
+          const prevUsernames = new Set(
+            entries.map((e) => `${e.username}-${e.createdAt}`),
+          );
+          const idx = newEntries.findIndex(
+            (e) => !prevUsernames.has(`${e.username}-${e.createdAt}`),
+          );
+          if (idx >= 0) {
+            setNewEntryIndex(idx);
+            setTimeout(() => setNewEntryIndex(null), 3000);
+          }
+        }
+
+        setEntries(newEntries);
+        setLastUpdated(new Date());
+        if (isInitial) setLoading(false);
+      } catch {
+        if (isInitial) setLoading(false);
+      }
+      setIsRefreshing(false);
+    },
+    [entries],
+  );
 
   // Initial load
   useEffect(() => {
@@ -156,23 +167,34 @@ export default function LeaderboardPage() {
         <div className="relative z-10 max-w-3xl mx-auto px-4 py-6">
           {/* Nav bar */}
           <div className="flex items-center justify-between mb-8">
-            <Link
-              href="/"
-              className="group relative px-4 py-2 inline-flex items-center gap-3"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(255, 70, 85, 0.1), transparent)",
-                clipPath:
-                  "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
-              }}
-            >
-              <span className="text-[#ff4655] text-lg font-black">
-                &larr;
-              </span>
-              <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-white transition-colors">
-                Home
-              </span>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="group relative px-4 py-2 inline-flex items-center gap-3"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(255, 70, 85, 0.1), transparent)",
+                  clipPath:
+                    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                }}
+              >
+                <span className="text-[#ff4655] text-lg font-black">
+                  &larr;
+                </span>
+                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-white transition-colors">
+                  Home
+                </span>
+              </Link>
+              <div className="relative w-10 h-10 rounded-lg overflow-hidden">
+                <Image
+                  src="/assets/logo/aiorreal_logo.jpg"
+                  alt="AI or Real Logo"
+                  width={40}
+                  height={40}
+                  className="object-cover"
+                />
+              </div>
+            </div>
 
             <div className="flex items-center gap-3">
               <Link href="/gallery">
@@ -390,20 +412,14 @@ export default function LeaderboardPage() {
                       />
                     )}
                     <div className="relative z-10">
-                      <span className="text-2xl">
-                        {medalEmoji[podiumRank]}
-                      </span>
+                      <span className="text-2xl">{medalEmoji[podiumRank]}</span>
                       <p className="font-black text-sm mt-2 truncate">
                         {entry.country && (
-                          <span className="mr-1">
-                            {getFlag(entry.country)}
-                          </span>
+                          <span className="mr-1">{getFlag(entry.country)}</span>
                         )}
                         {entry.username}
                       </p>
-                      <p
-                        className="text-xl font-black mt-1 gradient-text"
-                      >
+                      <p className="text-xl font-black mt-1 gradient-text">
                         {entry.score.toLocaleString()}
                       </p>
                       <div className="flex items-center justify-center gap-2 mt-2">
@@ -526,9 +542,7 @@ export default function LeaderboardPage() {
                         </span>
                         {entry.avgTime && (
                           <>
-                            <span className="text-[10px] text-white/15">
-                              |
-                            </span>
+                            <span className="text-[10px] text-white/15">|</span>
                             <span className="text-[10px] text-white/30 font-bold">
                               {entry.avgTime.toFixed(1)}s avg
                             </span>
@@ -581,7 +595,7 @@ export default function LeaderboardPage() {
               <div className="flex items-center gap-3">
                 <div className="w-12 h-px bg-gradient-to-r from-transparent to-[#ff4655]/30" />
                 <span className="text-[8px] font-black text-white/20 uppercase tracking-wider">
-                  aioreal.fun
+                  aiorreal.fun
                 </span>
                 <div className="w-12 h-px bg-gradient-to-l from-transparent to-[#00eeff]/30" />
               </div>

@@ -70,7 +70,15 @@ export default function GamePage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
   const { playGameMusic, playVictoryMusic, stopAllMusic } = useMusic();
-  const { playClick, playCorrect, playWrong, playTick, playGameOver, playWhoosh, playCoin } = useSfx();
+  const {
+    playClick,
+    playCorrect,
+    playWrong,
+    playTick,
+    playGameOver,
+    playWhoosh,
+    playCoin,
+  } = useSfx();
   const lastTickRef = useRef(TIME_PER_IMAGE);
 
   // Load countries from DB
@@ -188,7 +196,11 @@ export default function GamePage() {
       // Tick sound at each second when <= 3s
       const currentSecond = Math.ceil(remaining);
       const lastSecond = Math.ceil(lastTickRef.current);
-      if (currentSecond !== lastSecond && currentSecond <= 3 && currentSecond > 0) {
+      if (
+        currentSecond !== lastSecond &&
+        currentSecond <= 3 &&
+        currentSecond > 0
+      ) {
         playTick();
       }
       lastTickRef.current = remaining;
@@ -297,7 +309,7 @@ export default function GamePage() {
 
   // Music transitions
   useEffect(() => {
-    if (phase === "countdown" || phase === "playing" || phase === "feedback") {
+    if (phase === "countdown" || phase === "playing") {
       playGameMusic();
     } else if (phase === "gameover") {
       playVictoryMusic();
@@ -374,24 +386,35 @@ export default function GamePage() {
                 className="w-full max-w-md"
               >
                 {/* Back */}
-                <Link
-                  href="/"
-                  onClick={playClick}
-                  className="group relative px-4 py-2 inline-flex items-center gap-3 mb-6"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(255, 70, 85, 0.1), transparent)",
-                    clipPath:
-                      "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
-                  }}
-                >
-                  <span className="text-[#ff4655] text-lg font-black">
-                    &larr;
-                  </span>
-                  <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-white transition-colors">
-                    Back to Home
-                  </span>
-                </Link>
+                <div className="flex items-center justify-between mb-6">
+                  <Link
+                    href="/"
+                    onClick={playClick}
+                    className="group relative px-4 py-2 inline-flex items-center gap-3"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(255, 70, 85, 0.1), transparent)",
+                      clipPath:
+                        "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                    }}
+                  >
+                    <span className="text-[#ff4655] text-lg font-black">
+                      &larr;
+                    </span>
+                    <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-white transition-colors">
+                      Back to Home
+                    </span>
+                  </Link>
+                  <div className="relative w-10 h-10 rounded-lg overflow-hidden">
+                    <Image
+                      src="/assets/logo/aiorreal_logo.jpg"
+                      alt="AI or Real Logo"
+                      width={40}
+                      height={40}
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
 
                 <div className="glass rounded-2xl overflow-hidden glow-cyan clip-tactical relative">
                   {/* Animated corner accents */}
@@ -410,12 +433,20 @@ export default function GamePage() {
                   <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none opacity-40">
                     <m.div
                       animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.25 }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: 0.25,
+                      }}
                       className="absolute top-0 right-0 w-16 h-[2px] bg-gradient-to-l from-[#00eeff] to-transparent"
                     />
                     <m.div
                       animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.75 }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: 0.75,
+                      }}
                       className="absolute top-0 right-0 h-16 w-[2px] bg-gradient-to-b from-[#00eeff] to-transparent"
                     />
                   </div>
@@ -434,7 +465,10 @@ export default function GamePage() {
                       className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#00eeff]/20 blur-3xl"
                     />
                     <m.div
-                      animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.2, 0.1] }}
+                      animate={{
+                        scale: [1.2, 1, 1.2],
+                        opacity: [0.1, 0.2, 0.1],
+                      }}
                       transition={{ duration: 4, repeat: Infinity, delay: 2 }}
                       className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-[#ff4655]/20 blur-3xl"
                     />
@@ -464,7 +498,7 @@ export default function GamePage() {
                         transition={{ delay: 0.2 }}
                         className="text-3xl sm:text-4xl font-black mb-2"
                       >
-                        <span className="gradient-text">Enter the Arena</span>
+                        <span className="gradient-text">Play The Game</span>
                       </m.h2>
                       <m.p
                         initial={{ y: 20, opacity: 0 }}
@@ -485,8 +519,18 @@ export default function GamePage() {
                       transition={{ delay: 0.4 }}
                     >
                       <label className="block text-[10px] font-black uppercase tracking-[0.25em] text-white/50 mb-3 flex items-center gap-2">
-                        <svg className="w-3.5 h-3.5 text-[#00eeff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <svg
+                          className="w-3.5 h-3.5 text-[#00eeff]"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
                         </svg>
                         Your Name
                       </label>
@@ -503,9 +547,13 @@ export default function GamePage() {
                             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
                           }}
                         />
-                        <div className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" style={{
-                          background: "linear-gradient(135deg, rgba(0, 238, 255, 0.05), transparent)",
-                        }} />
+                        <div
+                          className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, rgba(0, 238, 255, 0.05), transparent)",
+                          }}
+                        />
                       </div>
                     </m.div>
 
@@ -517,8 +565,18 @@ export default function GamePage() {
                       transition={{ delay: 0.5 }}
                     >
                       <label className="block text-[10px] font-black uppercase tracking-[0.25em] text-white/50 mb-3 flex items-center gap-2">
-                        <svg className="w-3.5 h-3.5 text-[#ff4655]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-3.5 h-3.5 text-[#ff4655]"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         Country (Optional)
                       </label>
@@ -546,9 +604,13 @@ export default function GamePage() {
                             {countries.find((c) => c.name === country)?.flag}
                           </m.span>
                         )}
-                        <div className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" style={{
-                          background: "linear-gradient(135deg, rgba(255, 70, 85, 0.05), transparent)",
-                        }} />
+                        <div
+                          className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, rgba(255, 70, 85, 0.05), transparent)",
+                          }}
+                        />
 
                         {showCountryDropdown && (
                           <m.div
@@ -595,7 +657,10 @@ export default function GamePage() {
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.6 }}
-                      whileHover={{ scale: username.trim() ? 1.03 : 1, y: username.trim() ? -2 : 0 }}
+                      whileHover={{
+                        scale: username.trim() ? 1.03 : 1,
+                        y: username.trim() ? -2 : 0,
+                      }}
                       whileTap={{ scale: username.trim() ? 0.97 : 1 }}
                       onClick={startGame}
                       disabled={!username.trim()}
@@ -624,12 +689,32 @@ export default function GamePage() {
                         </>
                       )}
                       <span className="relative z-10 flex items-center justify-center gap-3">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
                         Start Game
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
                       </span>
                     </m.button>
@@ -645,9 +730,24 @@ export default function GamePage() {
                         className="grid grid-cols-3 gap-4 text-center"
                       >
                         {[
-                          { v: "12", l: "Images", c: "#00eeff", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
-                          { v: "5s", l: "Per Image", c: "#ff4655", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-                          { v: "2", l: "Choices", c: "#10b981", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
+                          {
+                            v: "12",
+                            l: "Images",
+                            c: "#00eeff",
+                            icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
+                          },
+                          {
+                            v: "5s",
+                            l: "Per Image",
+                            c: "#ff4655",
+                            icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+                          },
+                          {
+                            v: "2",
+                            l: "Choices",
+                            c: "#10b981",
+                            icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+                          },
                         ].map((s, idx) => (
                           <m.div
                             key={s.l}
@@ -662,11 +762,24 @@ export default function GamePage() {
                               boxShadow: `0 4px 15px ${s.c}10`,
                             }}
                           >
-                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
-                              background: `linear-gradient(135deg, ${s.c}08, transparent)`,
-                            }} />
-                            <svg className="w-5 h-5 mx-auto mb-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke={s.c}>
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={s.icon} />
+                            <div
+                              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                              style={{
+                                background: `linear-gradient(135deg, ${s.c}08, transparent)`,
+                              }}
+                            />
+                            <svg
+                              className="w-5 h-5 mx-auto mb-2 opacity-60"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke={s.c}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d={s.icon}
+                              />
                             </svg>
                             <div
                               className="text-2xl font-black mb-1"
@@ -821,7 +934,9 @@ export default function GamePage() {
                               boxShadow: "0 0 15px rgba(245, 158, 11, 0.1)",
                             }}
                           >
-                            <span className="text-amber-400 text-xs">&#x1F525;</span>
+                            <span className="text-amber-400 text-xs">
+                              &#x1F525;
+                            </span>
                             <span className="text-[9px] font-black text-amber-400 uppercase tracking-[0.15em]">
                               {streak}x Streak
                             </span>
@@ -872,7 +987,9 @@ export default function GamePage() {
                   </div>
 
                   {/* Timer bar */}
-                  <div className={`h-2 bg-white/5 rounded-full overflow-hidden ${isTimerCritical ? "animate-pulse" : ""}`}>
+                  <div
+                    className={`h-2 bg-white/5 rounded-full overflow-hidden ${isTimerCritical ? "animate-pulse" : ""}`}
+                  >
                     <div
                       className="h-full rounded-full transition-all duration-100 ease-linear"
                       style={{
@@ -885,7 +1002,11 @@ export default function GamePage() {
                   <div className="flex justify-between mt-1.5">
                     <m.span
                       animate={isTimerCritical ? { scale: [1, 1.15, 1] } : {}}
-                      transition={isTimerCritical ? { duration: 0.5, repeat: Infinity } : {}}
+                      transition={
+                        isTimerCritical
+                          ? { duration: 0.5, repeat: Infinity }
+                          : {}
+                      }
                       className="text-sm font-black tabular-nums"
                       style={{ color: timerColor }}
                     >
@@ -925,7 +1046,9 @@ export default function GamePage() {
                       <div className="absolute inset-0 flex items-center justify-center bg-[#020617]">
                         <div className="text-center">
                           <div className="w-10 h-10 border-3 border-white/10 border-t-[#00eeff] rounded-full animate-spin mx-auto mb-3" />
-                          <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Loading...</span>
+                          <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">
+                            Loading...
+                          </span>
                         </div>
                       </div>
                     )}
@@ -963,10 +1086,15 @@ export default function GamePage() {
                     {imageReady && phase === "playing" && (
                       <m.div
                         animate={{ y: ["-100%", "200%"] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
                         className="absolute left-0 right-0 h-[2px] opacity-20 pointer-events-none"
                         style={{
-                          background: "linear-gradient(90deg, transparent, #00eeff, transparent)",
+                          background:
+                            "linear-gradient(90deg, transparent, #00eeff, transparent)",
                           boxShadow: "0 0 10px #00eeff40",
                         }}
                       />
@@ -993,7 +1121,11 @@ export default function GamePage() {
                             <m.div
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
-                              transition={{ type: "spring", bounce: 0.6, delay: 0.1 }}
+                              transition={{
+                                type: "spring",
+                                bounce: 0.6,
+                                delay: 0.1,
+                              }}
                               className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 ${feedback.correct ? "bg-emerald-500" : "bg-red-500"}`}
                               style={{
                                 boxShadow: feedback.correct
@@ -1036,8 +1168,16 @@ export default function GamePage() {
                             </p>
                             <p className="text-white/70 text-sm mt-1 font-bold">
                               This was{" "}
-                              <span className={feedback.answer ? "text-[#ff4655]" : "text-[#00eeff]"}>
-                                {feedback.answer ? "AI Generated" : "A Real Photo"}
+                              <span
+                                className={
+                                  feedback.answer
+                                    ? "text-[#ff4655]"
+                                    : "text-[#00eeff]"
+                                }
+                              >
+                                {feedback.answer
+                                  ? "AI Generated"
+                                  : "A Real Photo"}
                               </span>
                             </p>
                             {feedback.correct && lastPoints > 0 && (
@@ -1088,7 +1228,8 @@ export default function GamePage() {
                             "linear-gradient(135deg, rgba(255, 70, 85, 0.18), rgba(255, 70, 85, 0.08))",
                           border: "2px solid rgba(255, 70, 85, 0.4)",
                           color: "#ff4655",
-                          boxShadow: "0 4px 25px rgba(255, 70, 85, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                          boxShadow:
+                            "0 4px 25px rgba(255, 70, 85, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                         }}
                       >
                         <m.div
@@ -1137,7 +1278,8 @@ export default function GamePage() {
                             "linear-gradient(135deg, rgba(0, 238, 255, 0.18), rgba(0, 238, 255, 0.08))",
                           border: "2px solid rgba(0, 238, 255, 0.4)",
                           color: "#00eeff",
-                          boxShadow: "0 4px 25px rgba(0, 238, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+                          boxShadow:
+                            "0 4px 25px rgba(0, 238, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                         }}
                       >
                         <m.div
@@ -1152,7 +1294,11 @@ export default function GamePage() {
                         <div className="absolute inset-0 bg-[#00eeff]/0 group-hover:bg-[#00eeff]/10 transition-colors pointer-events-none" />
                         <m.div
                           animate={{ opacity: [0.3, 0.6, 0.3] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: 1,
+                          }}
                           className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#00eeff] to-transparent opacity-50"
                         />
                         <span className="relative z-10 flex flex-col items-center justify-center gap-2">
@@ -1203,6 +1349,15 @@ export default function GamePage() {
                 isSaving={isSaving}
                 onPlayAgain={() => {
                   playClick();
+                  // Clear form fields
+                  setUsername("");
+                  setCountry("");
+                  setCountrySearch("");
+                  // Clear localStorage
+                  localStorage.removeItem("aioreal_username");
+                  localStorage.removeItem("aioreal_country");
+                  localStorage.removeItem("aioreal_country_search");
+                  // Reset game state
                   setPhase("register");
                   setCurrentIndex(0);
                   setResults([]);

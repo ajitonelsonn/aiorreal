@@ -133,23 +133,34 @@ export default function GalleryPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 py-6">
           {/* Nav bar */}
           <div className="flex items-center justify-between mb-8">
-            <Link
-              href="/"
-              className="group relative px-4 py-2 inline-flex items-center gap-3"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(255, 70, 85, 0.1), transparent)",
-                clipPath:
-                  "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
-              }}
-            >
-              <span className="text-[#ff4655] text-lg font-black">
-                &larr;
-              </span>
-              <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-white transition-colors">
-                Home
-              </span>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="group relative px-4 py-2 inline-flex items-center gap-3"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(255, 70, 85, 0.1), transparent)",
+                  clipPath:
+                    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                }}
+              >
+                <span className="text-[#ff4655] text-lg font-black">
+                  &larr;
+                </span>
+                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-white transition-colors">
+                  Home
+                </span>
+              </Link>
+              <div className="relative w-10 h-10 rounded-lg overflow-hidden">
+                <Image
+                  src="/assets/logo/aiorreal_logo.jpg"
+                  alt="AI or Real Logo"
+                  width={40}
+                  height={40}
+                  className="object-cover"
+                />
+              </div>
+            </div>
 
             <div className="flex items-center gap-3">
               <Link href="/leaderboard">

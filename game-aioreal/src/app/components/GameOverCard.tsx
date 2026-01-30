@@ -24,7 +24,26 @@ interface GameOverCardProps {
   onPlayAgain: () => void;
 }
 
+interface CountryItem {
+  name: string;
+  code: string;
+  flag: string;
+}
+
 type CardStep = "results" | "camera" | "preview" | "generating";
+
+const THEME = {
+  primary: "#ff4655",
+  secondary: "#fd4556",
+  accent: "#0f1923",
+  border: "#2a3441",
+  text: "#ece8e1",
+  glass: "rgba(15, 25, 35, 0.7)",
+  glassLight: "rgba(255, 255, 255, 0.05)",
+  success: "#10b981",
+  warning: "#f59e0b",
+  purple: "#a855f7",
+};
 
 export default function GameOverCard({
   username,
@@ -52,48 +71,86 @@ export default function GameOverCard({
             : "D";
   const gradeColor =
     grade === "S"
-      ? "#00eeff"
+      ? "#ff4655"
       : grade === "A"
         ? "#10b981"
         : grade === "B"
           ? "#f59e0b"
           : grade === "C"
             ? "#f97316"
-            : "#ff4655";
+            : "#6b7280";
 
   const [step, setStep] = useState<CardStep>("results");
   const [selfieData, setSelfieData] = useState<string | null>(null);
+  const [tempSelfie, setTempSelfie] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [captureCountdown, setCaptureCountdown] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [countries, setCountries] = useState<CountryItem[]>([]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Camera functions
+  useEffect(() => {
+    fetch("/api/countries")
+      .then((r) => r.json())
+      .then((d) => setCountries(Array.isArray(d) ? d : []))
+      .catch(console.error);
+  }, []);
+
+  const getCountryFlag = (countryName: string | null) => {
+    if (!countryName) return "";
+    const found = countries.find(
+      (c) => c.name === countryName || c.code === countryName,
+    );
+    return found?.flag || "";
+  };
+
+  const getCountryCode = () => {
+    if (!country) return "US";
+    const found = countries.find((c) => c.name === country);
+    return found?.code || "US";
+  };
+
+  const shareUrl =
+    uploadedUrl ||
+    (typeof window !== "undefined"
+      ? `${window.location.origin}/gallery`
+      : "https://aiorreal.fun/gallery");
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareUrl)}`;
+
   const startCamera = useCallback(async () => {
     try {
+      setStep("camera");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "user",
-          width: { ideal: 720 },
+          width: { ideal: 1280 },
           height: { ideal: 720 },
-          aspectRatio: { ideal: 1 },
         },
         audio: false,
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        await new Promise<void>((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = () => {
+              videoRef.current?.play().catch(console.error);
+              resolve();
+            };
+          } else {
+            resolve();
+          }
+        });
       }
-      setStep("camera");
     } catch (err) {
       console.error("Camera access denied:", err);
       alert("Could not access camera. Please grant camera permission.");
+      setStep("results");
     }
   }, []);
 
@@ -108,14 +165,11 @@ export default function GameOverCard({
     setCaptureCountdown(3);
   }, []);
 
-  // Countdown for photo capture
   useEffect(() => {
     if (captureCountdown <= 0) return;
-    if (captureCountdown === 0) return;
 
     const t = setTimeout(() => {
       if (captureCountdown === 1) {
-        // Capture
         if (videoRef.current && canvasRef.current) {
           const video = videoRef.current;
           const canvas = canvasRef.current;
@@ -123,14 +177,11 @@ export default function GameOverCard({
           canvas.height = video.videoHeight;
           const ctx = canvas.getContext("2d");
           if (ctx) {
-            // Mirror for selfie
             ctx.translate(canvas.width, 0);
             ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0);
             const data = canvas.toDataURL("image/png");
-            setSelfieData(data);
-            stopCamera();
-            setStep("preview");
+            setTempSelfie(data);
           }
         }
         setCaptureCountdown(0);
@@ -140,40 +191,23 @@ export default function GameOverCard({
     }, 1000);
 
     return () => clearTimeout(t);
-  }, [captureCountdown, stopCamera]);
+  }, [captureCountdown]);
 
-  // Cleanup camera on unmount
+  const confirmSelfie = useCallback(() => {
+    setSelfieData(tempSelfie);
+    setTempSelfie(null);
+    stopCamera();
+    setStep("results");
+  }, [tempSelfie, stopCamera]);
+
+  const retakeSelfie = useCallback(() => {
+    setTempSelfie(null);
+    setCaptureCountdown(0);
+  }, []);
+
   useEffect(() => {
     return () => stopCamera();
   }, [stopCamera]);
-
-  const retakeSelfie = useCallback(() => {
-    setSelfieData(null);
-    startCamera();
-  }, [startCamera]);
-
-  const downloadCard = useCallback(async () => {
-    if (!cardRef.current) return;
-    setIsDownloading(true);
-    try {
-      const { toJpeg } = await import("html-to-image");
-      const dataUrl = await toJpeg(cardRef.current, {
-        quality: 0.9,
-        pixelRatio: 2,
-        backgroundColor: "#0f1923",
-        filter: (node: HTMLElement) => {
-          return !node.dataset?.exportHide;
-        },
-      });
-      const link = document.createElement("a");
-      link.download = `aioreal-${username}-${score}.jpg`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error("Failed to download card:", err);
-    }
-    setIsDownloading(false);
-  }, [username, score]);
 
   const uploadCard = useCallback(async () => {
     if (!cardRef.current) return;
@@ -214,416 +248,94 @@ export default function GameOverCard({
     setIsUploading(false);
   }, [username, score, country]);
 
-  const generateCard = useCallback(async () => {
-    setStep("generating");
-    await uploadCard();
-    await downloadCard();
-    setStep("preview");
-  }, [uploadCard, downloadCard]);
+  const downloadCard = useCallback(async () => {
+    if (!cardRef.current) return;
+    setIsDownloading(true);
+    try {
+      if (!uploadedUrl) {
+        await uploadCard();
+      }
+
+      const { toJpeg } = await import("html-to-image");
+      const dataUrl = await toJpeg(cardRef.current, {
+        quality: 0.9,
+        pixelRatio: 2,
+        backgroundColor: "#0f1923",
+        filter: (node: HTMLElement) => {
+          return !node.dataset?.exportHide;
+        },
+      });
+      const link = document.createElement("a");
+      link.download = `aioreal-${username}-${score}.jpg`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to download card:", err);
+    }
+    setIsDownloading(false);
+  }, [username, score, uploadedUrl, uploadCard]);
+
+  const heroImages = [
+    "/assets/images/hero/Jett_Artwork_Full.webp",
+    "/assets/images/hero/Reyna_Artwork_Full.webp",
+    "/assets/images/hero/Sage_Artwork_Full.webp",
+  ];
+  const randomHero = heroImages[Math.floor(Math.random() * heroImages.length)];
 
   return (
     <m.div
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5 }}
-      className="w-full max-w-lg"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full max-w-4xl mx-auto"
     >
       <AnimatePresence mode="wait">
-        {/* ===== STEP: RESULTS ===== */}
-        {step === "results" && (
-          <m.div
-            key="results"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, x: -50 }}
-          >
-            <div
-              ref={cardRef}
-              className="glass overflow-hidden clip-tactical"
-              style={{
-                boxShadow: "0 0 60px rgba(0, 238, 255, 0.08)",
-              }}
-            >
-              {/* Header */}
-              <div
-                className="p-8 text-center relative overflow-hidden"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(255, 70, 85, 0.12), rgba(0, 238, 255, 0.12))",
-                }}
-              >
-                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#00eeff]/10 blur-2xl" />
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-[#ff4655]/10 blur-2xl" />
-
-                <div className="relative z-10">
-                  <div
-                    className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 clip-skew"
-                    style={{
-                      background: "rgba(0, 238, 255, 0.08)",
-                      border: "1px solid rgba(0, 238, 255, 0.2)",
-                    }}
-                  >
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00eeff] opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00eeff]" />
-                    </span>
-                    <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#00eeff]">
-                      Mission Complete
-                    </span>
-                  </div>
-
-                  {/* Selfie circle placeholder */}
-                  {selfieData ? (
-                    <div className="w-24 h-24 rounded-full mx-auto mb-3 overflow-hidden border-2 border-[#00eeff]/30"
-                      style={{ boxShadow: "0 0 25px rgba(0, 238, 255, 0.2)" }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={selfieData} alt="Selfie" className="w-full h-full object-cover" />
-                    </div>
-                  ) : null}
-
-                  <h2 className="text-3xl sm:text-4xl font-black mb-1">
-                    {username}
-                  </h2>
-                  {country && (
-                    <p className="text-xs text-white/40 font-bold uppercase tracking-wider">
-                      {country}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Score section */}
-              <div className="px-8 py-6">
-                {/* Grade + Score */}
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 mb-1">
-                      Total Score
-                    </p>
-                    <p className="text-4xl sm:text-5xl font-black gradient-text">
-                      {score}
-                    </p>
-                  </div>
-                  <m.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", bounce: 0.5, delay: 0.3 }}
-                    className="w-20 h-20 flex items-center justify-center clip-tactical"
-                    style={{
-                      background: `${gradeColor}12`,
-                      border: `2px solid ${gradeColor}40`,
-                      boxShadow: `0 0 30px ${gradeColor}20`,
-                    }}
-                  >
-                    <span
-                      className="text-4xl font-black"
-                      style={{ color: gradeColor }}
-                    >
-                      {grade}
-                    </span>
-                  </m.div>
-                </div>
-
-                {/* Stats grid */}
-                <div className="grid grid-cols-3 gap-3 mb-8">
-                  {[
-                    {
-                      label: "Correct",
-                      value: `${correctCount}/${results.length}`,
-                      color: "#10b981",
-                    },
-                    {
-                      label: "Accuracy",
-                      value: `${accuracy}%`,
-                      color: "#00eeff",
-                    },
-                    {
-                      label: "Avg Time",
-                      value: `${avgTime.toFixed(1)}s`,
-                      color: "#f59e0b",
-                    },
-                  ].map((stat) => (
-                    <div
-                      key={stat.label}
-                      className="text-center p-3 clip-tactical-sm"
-                      style={{
-                        background: `${stat.color}08`,
-                        border: `1px solid ${stat.color}20`,
-                      }}
-                    >
-                      <p
-                        className="text-xl font-black"
-                        style={{ color: stat.color }}
-                      >
-                        {stat.value}
-                      </p>
-                      <p className="text-[8px] font-black uppercase tracking-[0.15em] text-white/30 mt-1">
-                        {stat.label}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Rank */}
-                {rank && (
-                  <m.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-center mb-6 p-4 clip-tactical-sm"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(0, 238, 255, 0.06), rgba(255, 70, 85, 0.06))",
-                      border: "1px solid rgba(255, 255, 255, 0.06)",
-                    }}
-                  >
-                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 mb-1">
-                      Global Rank
-                    </p>
-                    <p className="text-2xl font-black gradient-text">
-                      #{rank}
-                    </p>
-                  </m.div>
-                )}
-
-                {isSaving && (
-                  <div className="text-center mb-4">
-                    <div className="w-5 h-5 border-2 border-white/10 border-t-[#00eeff] rounded-full animate-spin mx-auto mb-2" />
-                    <p className="text-[9px] text-white/30 font-black uppercase tracking-wider">
-                      Saving score...
-                    </p>
-                  </div>
-                )}
-
-                {/* Image results grid */}
-                <div className="mb-8">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-px bg-gradient-to-r from-[#ff4655]/50 to-transparent" />
-                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30">
-                      Your Answers
-                    </p>
-                    <div className="flex-1 h-px bg-white/5" />
-                  </div>
-                  <div className="grid grid-cols-6 gap-2">
-                    {results.map((r, i) => (
-                      <m.div
-                        key={i}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: i * 0.04 }}
-                        className="relative portrait-image rounded-lg overflow-hidden clip-tactical-sm"
-                        style={{
-                          border: `1px solid ${r.correct ? "rgba(16, 185, 129, 0.3)" : "rgba(255, 70, 85, 0.3)"}`,
-                        }}
-                      >
-                        <Image
-                          src={r.url}
-                          alt={`Image ${i + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="60px"
-                        />
-                        <div
-                          className={`absolute inset-0 flex items-center justify-center ${r.correct ? "bg-emerald-500/40" : "bg-red-500/40"}`}
-                        >
-                          {r.correct ? (
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="absolute bottom-0 inset-x-0 bg-black/60 py-0.5">
-                          <p
-                            className="text-[6px] font-black text-center uppercase tracking-wider"
-                            style={{ color: r.isAi ? "#ff4655" : "#00eeff" }}
-                          >
-                            {r.isAi ? "AI" : "Real"}
-                          </p>
-                        </div>
-                      </m.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Branding footer for exported card */}
-                <div className="flex items-center justify-center gap-4 mb-6 opacity-60">
-                  <Image
-                    src="/assets/images/logos/cloud9-icon.png"
-                    alt="Cloud9"
-                    width={24}
-                    height={24}
-                    className="opacity-70"
-                  />
-                  <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">
-                    aioreal.fun
-                  </span>
-                  <Image
-                    src="/assets/images/logos/jetbrains-icon.png"
-                    alt="JetBrains"
-                    width={24}
-                    height={24}
-                    className="opacity-70"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons - hidden from export */}
-            <div className="space-y-3 mt-6" data-export-hide="true">
-              {/* Take Photo + Generate Card button */}
-              <m.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={startCamera}
-                className="w-full py-4 font-black uppercase tracking-[0.15em] text-sm cursor-pointer clip-skew overflow-hidden relative"
-                style={{
-                  background: "linear-gradient(135deg, #00eeff, #10b981)",
-                  boxShadow: "0 0 30px rgba(0, 238, 255, 0.15)",
-                }}
-              >
-                <m.div
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-                />
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Take Photo & Generate Card
-                </span>
-              </m.button>
-
-              {/* Skip photo - just download */}
-              <m.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={generateCard}
-                disabled={isUploading || isDownloading}
-                className="w-full py-4 font-black uppercase tracking-[0.15em] text-sm cursor-pointer clip-tactical-sm transition-colors disabled:opacity-50"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(255, 70, 85, 0.08), rgba(0, 238, 255, 0.08))",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                {isUploading || isDownloading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    Generating...
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download Card (No Photo)
-                  </span>
-                )}
-              </m.button>
-
-              <m.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={onPlayAgain}
-                className="w-full py-4 font-black uppercase tracking-[0.15em] text-sm cursor-pointer clip-skew overflow-hidden relative"
-                style={{
-                  background: "linear-gradient(135deg, #ff4655, #00eeff)",
-                  boxShadow: "0 0 30px rgba(255, 70, 85, 0.15)",
-                }}
-              >
-                <m.div
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-                />
-                <span className="relative z-10">Play Again</span>
-              </m.button>
-
-              <Link href="/leaderboard" className="block">
-                <m.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 font-black uppercase tracking-[0.15em] text-sm cursor-pointer clip-tactical-sm transition-colors"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01))",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  View Leaderboard
-                </m.button>
-              </Link>
-
-              <Link href="/" className="block text-center pt-2">
-                <span className="text-xs text-white/30 hover:text-white/50 transition-colors font-bold uppercase tracking-wider">
-                  Back to Home
-                </span>
-              </Link>
-            </div>
-          </m.div>
-        )}
-
-        {/* ===== STEP: CAMERA ===== */}
         {step === "camera" && (
           <m.div
             key="camera"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            className="w-full max-w-md mx-auto"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            className="w-full"
           >
-            <div className="glass overflow-hidden clip-tactical" style={{ boxShadow: "0 0 60px rgba(0, 238, 255, 0.08)" }}>
-              <div className="p-6 text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 clip-skew"
-                  style={{ background: "rgba(0, 238, 255, 0.08)", border: "1px solid rgba(0, 238, 255, 0.2)" }}
-                >
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00eeff] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00eeff]" />
-                  </span>
-                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#00eeff]">Camera Active</span>
-                </div>
-                <h3 className="text-xl font-black mb-4">Take a Selfie</h3>
+            <div className="relative bg-gradient-to-br from-[#0a0e1a] via-[#0f1520] to-[#0a0e1a] rounded-3xl border border-white/10 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#ff4655]/8 via-transparent to-[#a855f7]/5 pointer-events-none" />
+              <div
+                className="absolute inset-0 opacity-[0.02]"
+                style={{
+                  backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                  backgroundSize: "20px 20px",
+                }}
+              />
 
-                {/* Video preview */}
-                <div className="relative w-64 h-64 mx-auto rounded-full overflow-hidden border-2 border-[#00eeff]/30 mb-6"
-                  style={{ boxShadow: "0 0 40px rgba(0, 238, 255, 0.15)" }}
+              <div className="relative p-8">
+                <m.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex items-center gap-3 mb-6"
                 >
+                  <div className="relative flex items-center gap-2">
+                    <div className="relative">
+                      <div className="w-2.5 h-2.5 bg-[#ff4655] rounded-full animate-pulse" />
+                      <div className="absolute inset-0 w-2.5 h-2.5 bg-[#ff4655] rounded-full animate-ping" />
+                    </div>
+                    <div className="h-4 w-px bg-[#ff4655]/30" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold uppercase tracking-wider text-[#ff4655]">
+                      Camera Active
+                    </span>
+                    <div className="px-2 py-0.5 rounded-full bg-[#ff4655]/20 border border-[#ff4655]/30">
+                      <span className="text-[10px] font-bold text-[#ff4655]">
+                        REC
+                      </span>
+                    </div>
+                  </div>
+                </m.div>
+
+                <div className="relative w-full aspect-video bg-black/60 rounded-2xl mb-6 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-sm border border-white/10">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -632,352 +344,888 @@ export default function GameOverCard({
                     className="w-full h-full object-cover scale-x-[-1]"
                   />
 
-                  {/* Corner HUD on video */}
-                  <div className="absolute top-2 left-2 w-6 h-6 pointer-events-none opacity-50">
-                    <div className="absolute top-0 left-0 w-full h-[1px] bg-[#00eeff]" />
-                    <div className="absolute top-0 left-0 h-full w-[1px] bg-[#00eeff]" />
-                  </div>
-                  <div className="absolute top-2 right-2 w-6 h-6 pointer-events-none opacity-50">
-                    <div className="absolute top-0 right-0 w-full h-[1px] bg-[#ff4655]" />
-                    <div className="absolute top-0 right-0 h-full w-[1px] bg-[#ff4655]" />
-                  </div>
+                  {/* Enhanced corner brackets */}
+                  <div className="absolute top-4 left-4 w-8 h-8 border-l-[3px] border-t-[3px] border-[#ff4655] rounded-tl-xl" />
+                  <div className="absolute top-4 right-4 w-8 h-8 border-r-[3px] border-t-[3px] border-[#ff4655] rounded-tr-xl" />
+                  <div className="absolute bottom-4 left-4 w-8 h-8 border-l-[3px] border-b-[3px] border-[#ff4655] rounded-bl-xl" />
+                  <div className="absolute bottom-4 right-4 w-8 h-8 border-r-[3px] border-b-[3px] border-[#ff4655] rounded-br-xl" />
 
-                  {/* Countdown overlay */}
+                  {/* Scanning line animation */}
+                  <m.div
+                    animate={{ y: ["0%", "100%"] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#ff4655]/50 to-transparent"
+                  />
+
                   <AnimatePresence>
-                    {captureCountdown > 0 && (
+                    {tempSelfie ? (
                       <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 flex items-center justify-center bg-black/40"
+                        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
                       >
-                        <m.span
-                          key={captureCountdown}
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 1.5, opacity: 0 }}
-                          className="text-6xl font-black text-white drop-shadow-[0_0_20px_rgba(0,238,255,0.5)]"
-                        >
-                          {captureCountdown}
-                        </m.span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={tempSelfie}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
                       </m.div>
+                    ) : (
+                      captureCountdown > 0 && (
+                        <m.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md"
+                        >
+                          <m.div
+                            key={captureCountdown}
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 1.5, opacity: 0 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 200,
+                              damping: 15,
+                            }}
+                            className="relative"
+                          >
+                            <span className="text-7xl font-black text-white drop-shadow-2xl">
+                              {captureCountdown}
+                            </span>
+                            <div className="absolute inset-0 text-7xl font-black text-[#ff4655] blur-xl opacity-50">
+                              {captureCountdown}
+                            </div>
+                          </m.div>
+                        </m.div>
+                      )
                     )}
                   </AnimatePresence>
                 </div>
 
                 <canvas ref={canvasRef} className="hidden" />
 
-                <div className="space-y-3">
-                  <m.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={takeSelfie}
-                    disabled={captureCountdown > 0}
-                    className="w-full py-4 font-black uppercase tracking-[0.15em] text-sm cursor-pointer clip-skew overflow-hidden relative disabled:opacity-50"
-                    style={{
-                      background: "linear-gradient(135deg, #00eeff, #10b981)",
-                      boxShadow: "0 0 30px rgba(0, 238, 255, 0.15)",
-                    }}
-                  >
-                    <span className="relative z-10 flex items-center justify-center gap-2">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {captureCountdown > 0 ? `Capturing in ${captureCountdown}...` : "Capture"}
-                    </span>
-                  </m.button>
-
-                  <button
-                    onClick={() => {
-                      stopCamera();
-                      setStep("results");
-                    }}
-                    className="w-full py-3 text-xs text-white/40 hover:text-white/60 transition-colors font-bold uppercase tracking-wider cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </m.div>
-        )}
-
-        {/* ===== STEP: PREVIEW (after selfie) ===== */}
-        {step === "preview" && selfieData && (
-          <m.div
-            key="preview"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-          >
-            <div
-              ref={step === "preview" ? cardRef : undefined}
-              className="glass overflow-hidden clip-tactical"
-              style={{
-                boxShadow: "0 0 60px rgba(0, 238, 255, 0.08)",
-              }}
-            >
-              {/* Header with selfie */}
-              <div
-                className="p-8 text-center relative overflow-hidden"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(255, 70, 85, 0.12), rgba(0, 238, 255, 0.12))",
-                }}
-              >
-                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#00eeff]/10 blur-2xl" />
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-[#ff4655]/10 blur-2xl" />
-
-                <div className="relative z-10">
-                  <div
-                    className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 clip-skew"
-                    style={{
-                      background: "rgba(0, 238, 255, 0.08)",
-                      border: "1px solid rgba(0, 238, 255, 0.2)",
-                    }}
-                  >
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00eeff] opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00eeff]" />
-                    </span>
-                    <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#00eeff]">
-                      Victory Card
-                    </span>
-                  </div>
-
-                  {/* Selfie */}
-                  <div
-                    className="w-28 h-28 rounded-full mx-auto mb-3 overflow-hidden border-2 border-[#00eeff]/40"
-                    style={{ boxShadow: "0 0 30px rgba(0, 238, 255, 0.25)" }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={selfieData}
-                      alt="Selfie"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <h2 className="text-3xl sm:text-4xl font-black mb-1">
-                    {username}
-                  </h2>
-                  {country && (
-                    <p className="text-xs text-white/40 font-bold uppercase tracking-wider">
-                      {country}
-                    </p>
+                <div className="space-y-4">
+                  {tempSelfie ? (
+                    <>
+                      <m.button
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={confirmSelfie}
+                        className="w-full py-4 bg-gradient-to-r from-[#10b981] via-[#10b981] to-[#059669] hover:from-[#059669] hover:via-[#10b981] hover:to-[#10b981] text-white font-bold uppercase text-sm tracking-wider transition-all duration-300 rounded-2xl shadow-[0_10px_40px_-10px_rgba(16,185,129,0.5)] hover:shadow-[0_20px_60px_-10px_rgba(16,185,129,0.7)] relative overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                        <div className="relative z-10 flex items-center justify-center gap-2">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                          Confirm Photo
+                        </div>
+                      </m.button>
+                      <m.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        whileHover={{ scale: selfieData ? 1 : 1.05 }}
+                        whileTap={{ scale: selfieData ? 1 : 0.95 }}
+                        onClick={retakeSelfie}
+                        disabled={!!selfieData}
+                        className="w-full py-3 text-sm text-white/60 hover:text-white/90 transition-all duration-300 font-semibold uppercase tracking-wider rounded-xl hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-white/60 disabled:hover:bg-transparent"
+                      >
+                        Retake
+                      </m.button>
+                    </>
+                  ) : (
+                    <>
+                      <m.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={takeSelfie}
+                        disabled={captureCountdown > 0}
+                        className="w-full py-4 bg-gradient-to-r from-[#ff4655] via-[#ff5565] to-[#ff4655] hover:from-[#ff5565] hover:via-[#ff6675] hover:to-[#ff5565] text-white font-bold uppercase text-sm tracking-wider transition-all duration-300 rounded-2xl shadow-[0_10px_40px_-10px_rgba(255,70,85,0.5)] hover:shadow-[0_20px_60px_-10px_rgba(255,70,85,0.7)] disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                        <div className="relative z-10 flex items-center justify-center gap-3">
+                          <div className="relative">
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            {captureCountdown > 0 && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-pulse" />
+                            )}
+                          </div>
+                          {captureCountdown > 0
+                            ? `Capturing in ${captureCountdown}...`
+                            : "Capture Photo"}
+                        </div>
+                      </m.button>
+                      <m.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          stopCamera();
+                          setStep("results");
+                        }}
+                        className="w-full py-3 text-sm text-white/60 hover:text-white/90 transition-all duration-300 font-semibold uppercase tracking-wider rounded-xl hover:bg-white/5"
+                      >
+                        Cancel
+                      </m.button>
+                    </>
                   )}
                 </div>
               </div>
-
-              {/* Score */}
-              <div className="px-8 py-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 mb-1">
-                      Total Score
-                    </p>
-                    <p className="text-4xl sm:text-5xl font-black gradient-text">
-                      {score}
-                    </p>
-                  </div>
-                  <div
-                    className="w-20 h-20 flex items-center justify-center clip-tactical"
-                    style={{
-                      background: `${gradeColor}12`,
-                      border: `2px solid ${gradeColor}40`,
-                      boxShadow: `0 0 30px ${gradeColor}20`,
-                    }}
-                  >
-                    <span
-                      className="text-4xl font-black"
-                      style={{ color: gradeColor }}
-                    >
-                      {grade}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  {[
-                    { label: "Correct", value: `${correctCount}/${results.length}`, color: "#10b981" },
-                    { label: "Accuracy", value: `${accuracy}%`, color: "#00eeff" },
-                    { label: "Avg Time", value: `${avgTime.toFixed(1)}s`, color: "#f59e0b" },
-                  ].map((stat) => (
-                    <div
-                      key={stat.label}
-                      className="text-center p-3 clip-tactical-sm"
-                      style={{
-                        background: `${stat.color}08`,
-                        border: `1px solid ${stat.color}20`,
-                      }}
-                    >
-                      <p className="text-xl font-black" style={{ color: stat.color }}>
-                        {stat.value}
-                      </p>
-                      <p className="text-[8px] font-black uppercase tracking-[0.15em] text-white/30 mt-1">
-                        {stat.label}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {rank && (
-                  <div
-                    className="text-center mb-6 p-4 clip-tactical-sm"
-                    style={{
-                      background: "linear-gradient(135deg, rgba(0, 238, 255, 0.06), rgba(255, 70, 85, 0.06))",
-                      border: "1px solid rgba(255, 255, 255, 0.06)",
-                    }}
-                  >
-                    <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30 mb-1">
-                      Global Rank
-                    </p>
-                    <p className="text-2xl font-black gradient-text">#{rank}</p>
-                  </div>
-                )}
-
-                {/* Image results mini grid */}
-                <div className="grid grid-cols-6 gap-1.5 mb-6">
-                  {results.map((r, i) => (
-                    <div
-                      key={i}
-                      className="relative portrait-image rounded overflow-hidden"
-                      style={{
-                        border: `1px solid ${r.correct ? "rgba(16, 185, 129, 0.3)" : "rgba(255, 70, 85, 0.3)"}`,
-                      }}
-                    >
-                      <Image src={r.url} alt="" fill className="object-cover" sizes="50px" />
-                      <div className={`absolute inset-0 ${r.correct ? "bg-emerald-500/40" : "bg-red-500/40"}`}>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          {r.correct ? (
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          ) : (
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Branding */}
-                <div className="flex items-center justify-center gap-4 opacity-60">
-                  <Image src="/assets/images/logos/cloud9-icon.png" alt="Cloud9" width={24} height={24} className="opacity-70" />
-                  <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">aioreal.fun</span>
-                  <Image src="/assets/images/logos/jetbrains-icon.png" alt="JetBrains" width={24} height={24} className="opacity-70" />
-                </div>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="space-y-3 mt-6" data-export-hide="true">
-              {uploadedUrl && (
-                <m.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center p-3 clip-tactical-sm mb-2"
-                  style={{
-                    background: "rgba(16, 185, 129, 0.08)",
-                    border: "1px solid rgba(16, 185, 129, 0.2)",
-                  }}
-                >
-                  <p className="text-[9px] font-black text-emerald-400 uppercase tracking-wider">
-                    Card saved to gallery!
-                  </p>
-                </m.div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <m.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={downloadCard}
-                  disabled={isDownloading}
-                  className="py-3 font-black uppercase tracking-[0.1em] text-xs cursor-pointer clip-tactical-sm overflow-hidden relative disabled:opacity-50"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(0, 238, 255, 0.1), rgba(0, 238, 255, 0.05))",
-                    border: "1px solid rgba(0, 238, 255, 0.3)",
-                    color: "#00eeff",
-                  }}
-                >
-                  {isDownloading ? "Saving..." : "Download"}
-                </m.button>
-
-                <m.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={uploadCard}
-                  disabled={isUploading || !!uploadedUrl}
-                  className="py-3 font-black uppercase tracking-[0.1em] text-xs cursor-pointer clip-tactical-sm overflow-hidden relative disabled:opacity-50"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05))",
-                    border: "1px solid rgba(16, 185, 129, 0.3)",
-                    color: "#10b981",
-                  }}
-                >
-                  {isUploading ? "Uploading..." : uploadedUrl ? "Saved!" : "Save to Gallery"}
-                </m.button>
-              </div>
-
-              <m.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={retakeSelfie}
-                className="w-full py-3 font-black uppercase tracking-[0.1em] text-xs cursor-pointer clip-tactical-sm"
-                style={{
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                }}
-              >
-                Retake Photo
-              </m.button>
-
-              <m.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={onPlayAgain}
-                className="w-full py-4 font-black uppercase tracking-[0.15em] text-sm cursor-pointer clip-skew overflow-hidden relative"
-                style={{
-                  background: "linear-gradient(135deg, #ff4655, #00eeff)",
-                  boxShadow: "0 0 30px rgba(255, 70, 85, 0.15)",
-                }}
-              >
-                <m.div
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-                />
-                <span className="relative z-10">Play Again</span>
-              </m.button>
-
-              <Link href="/leaderboard" className="block text-center pt-1">
-                <span className="text-xs text-white/30 hover:text-white/50 transition-colors font-bold uppercase tracking-wider">
-                  View Leaderboard
-                </span>
-              </Link>
             </div>
           </m.div>
         )}
 
-        {/* ===== STEP: GENERATING ===== */}
-        {step === "generating" && (
+        {step === "results" && (
           <m.div
-            key="generating"
+            key="results"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-center py-20"
+            transition={{ duration: 0.3 }}
+            className="w-full"
           >
-            <div className="w-12 h-12 border-3 border-white/10 border-t-[#00eeff] rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-sm font-black text-white/40 uppercase tracking-wider">
-              Generating your card...
-            </p>
+            <div
+              ref={cardRef}
+              className="relative bg-gradient-to-br from-[#0a0e1a] via-[#0f1520] to-[#0a0e1a] rounded-3xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]"
+            >
+              {/* Enhanced Animated Background with Mesh Gradient */}
+              <m.div
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="absolute inset-0 overflow-hidden"
+              >
+                <div
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  style={{
+                    backgroundImage: `url(${randomHero})`,
+                    filter: "blur(4px) brightness(0.4)",
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#0a0e1a]/98 via-[#0f1520]/95 to-[#1a0f1f]/98" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#ff4655]/10 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-[#a855f7]/8 via-transparent to-transparent" />
+              </m.div>
+
+              {/* Animated Border Glow */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ff4655] to-transparent opacity-80" />
+              <div className="absolute inset-0 border border-white/5 rounded-3xl pointer-events-none" />
+
+              {/* Subtle Grid Pattern Overlay */}
+              <div
+                className="absolute inset-0 opacity-[0.02]"
+                style={{
+                  backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                  backgroundSize: "20px 20px",
+                }}
+              />
+
+              <div className="relative p-8">
+                {/* Modern Header with Enhanced Layout */}
+                <div className="mb-8">
+                  <div className="flex items-start justify-between gap-6 mb-6">
+                    {/* Left: Player Info */}
+                    <div className="flex items-center gap-5 flex-1 min-w-0">
+                      {selfieData && (
+                        <m.div
+                          initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
+                          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                          transition={{
+                            duration: 0.6,
+                            delay: 0.2,
+                            type: "spring",
+                            stiffness: 180,
+                          }}
+                          className="relative w-28 h-28 rounded-2xl overflow-hidden flex-shrink-0 shadow-[0_8px_30px_rgb(0,0,0,0.4)]"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={selfieData}
+                            alt="Player"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#ff4655]/20 via-transparent to-[#a855f7]/10" />
+                          <div className="absolute inset-0 ring-2 ring-white/10 rounded-2xl" />
+                          <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-[#ff4655] rounded-tl-md" />
+                          <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-[#ff4655] rounded-br-md" />
+                        </m.div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <m.div
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                          className="flex items-center gap-2 mb-3"
+                        >
+                          <div className="px-3 py-1 rounded-full bg-gradient-to-r from-[#ff4655]/20 to-[#ff4655]/10 border border-[#ff4655]/30 backdrop-blur-sm">
+                            <span className="text-[10px] font-bold text-[#ff4655] uppercase tracking-wider">
+                              Player
+                            </span>
+                          </div>
+                          {getCountryFlag(country) && (
+                            <span className="text-2xl drop-shadow-lg">
+                              {getCountryFlag(country)}
+                            </span>
+                          )}
+                        </m.div>
+                        <m.div
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.4 }}
+                          className="text-3xl font-black uppercase tracking-tight text-white truncate drop-shadow-[0_2px_10px_rgba(255,70,85,0.3)]"
+                        >
+                          {username}
+                        </m.div>
+                      </div>
+                    </div>
+
+                    {/* Right: Grade Badge */}
+                    <m.div
+                      initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      transition={{
+                        duration: 0.7,
+                        delay: 0.3,
+                        type: "spring",
+                        stiffness: 150,
+                      }}
+                      className="relative w-24 h-24 flex items-center justify-center rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex-shrink-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${gradeColor}20, ${gradeColor}10)`,
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0 border-2 rounded-2xl"
+                        style={{ borderColor: `${gradeColor}60` }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl" />
+                      <span
+                        className="text-5xl font-black drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)] relative z-10"
+                        style={{ color: gradeColor }}
+                      >
+                        {grade}
+                      </span>
+                      {/* Animated glow effect */}
+                      <m.div
+                        animate={{
+                          opacity: [0.3, 0.6, 0.3],
+                          scale: [1, 1.1, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        className="absolute inset-0 rounded-2xl blur-xl"
+                        style={{ backgroundColor: `${gradeColor}40` }}
+                      />
+                    </m.div>
+                  </div>
+
+                  {/* Score Display - Prominent */}
+                  <m.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                    className="relative p-6 rounded-2xl bg-gradient-to-br from-[#ff4655]/15 via-[#ff4655]/10 to-transparent border border-[#ff4655]/30 backdrop-blur-sm overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                    <div className="relative flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">
+                          Final Score
+                        </div>
+                        <m.div
+                          initial={{ scale: 0.5 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            duration: 0.6,
+                            delay: 0.6,
+                            type: "spring",
+                            stiffness: 200,
+                          }}
+                          className="text-6xl font-black text-[#ff4655] drop-shadow-[0_4px_20px_rgba(255,70,85,0.4)]"
+                        >
+                          {score}
+                        </m.div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">
+                          Rank
+                        </div>
+                        {rank ? (
+                          <div className="text-3xl font-black text-white/90">
+                            #{rank}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-white/40">
+                            Calculating...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </m.div>
+                </div>
+
+                {/* Performance Stats Section */}
+                <m.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
+                  className="mb-8"
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-[#10b981] rounded-full animate-pulse" />
+                      <div
+                        className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-pulse"
+                        style={{ animationDelay: "0.2s" }}
+                      />
+                      <div
+                        className="w-1 h-1 bg-[#10b981] rounded-full animate-pulse"
+                        style={{ animationDelay: "0.4s" }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/70">
+                      Performance Stats
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    {[
+                      {
+                        label: "Correct",
+                        value: `${correctCount}/${results.length}`,
+                        color: "#10b981",
+                        icon: (
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        ),
+                        gradient: "from-[#10b981]/20 to-[#10b981]/5",
+                      },
+                      {
+                        label: "Accuracy",
+                        value: `${accuracy}%`,
+                        color: "#ff4655",
+                        icon: (
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
+                          </svg>
+                        ),
+                        gradient: "from-[#ff4655]/20 to-[#ff4655]/5",
+                      },
+                      {
+                        label: "Avg Time",
+                        value: `${avgTime.toFixed(1)}s`,
+                        color: "#f59e0b",
+                        icon: (
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                        ),
+                        gradient: "from-[#f59e0b]/20 to-[#f59e0b]/5",
+                      },
+                    ].map((stat, index) => (
+                      <m.div
+                        key={stat.label}
+                        initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: 0.8 + index * 0.1,
+                          type: "spring",
+                          stiffness: 200,
+                        }}
+                        whileHover={{
+                          scale: 1.05,
+                          y: -5,
+                          transition: { duration: 0.2 },
+                        }}
+                        className={`relative group text-center p-5 rounded-2xl overflow-hidden backdrop-blur-md shadow-lg bg-gradient-to-br ${stat.gradient} border border-white/10 cursor-pointer`}
+                      >
+                        {/* Hover glow effect */}
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"
+                          style={{ backgroundColor: `${stat.color}30` }}
+                        />
+
+                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+                        <div className="relative z-10">
+                          <div
+                            className="inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3 bg-gradient-to-br from-white/10 to-transparent"
+                            style={{ color: stat.color }}
+                          >
+                            {stat.icon}
+                          </div>
+                          <div
+                            className="text-2xl font-black mb-2 drop-shadow-lg"
+                            style={{ color: stat.color }}
+                          >
+                            {stat.value}
+                          </div>
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-white/60">
+                            {stat.label}
+                          </div>
+                        </div>
+
+                        {/* Animated corner accents */}
+                        <div
+                          className="absolute top-2 left-2 w-3 h-3 border-l-2 border-t-2 rounded-tl-lg opacity-30 group-hover:opacity-60 transition-opacity"
+                          style={{ borderColor: stat.color }}
+                        />
+                        <div
+                          className="absolute bottom-2 right-2 w-3 h-3 border-r-2 border-b-2 rounded-br-lg opacity-30 group-hover:opacity-60 transition-opacity"
+                          style={{ borderColor: stat.color }}
+                        />
+                      </m.div>
+                    ))}
+                  </div>
+                </m.div>
+
+                {/* Share Section with QR Code */}
+                <m.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.1 }}
+                  className="pt-6 border-t border-white/10"
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <svg
+                      className="w-4 h-4 text-[#a855f7]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                      />
+                    </svg>
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/70">
+                      Share Your Victory
+                    </span>
+                  </div>
+
+                  <div className="relative p-5 rounded-2xl bg-gradient-to-br from-[#a855f7]/10 via-[#a855f7]/5 to-transparent border border-[#a855f7]/20 backdrop-blur-sm overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+
+                    <div className="relative flex items-center gap-5">
+                      <m.div
+                        initial={{ opacity: 0, rotate: -180, scale: 0.5 }}
+                        animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                        transition={{
+                          duration: 0.7,
+                          delay: 1.2,
+                          type: "spring",
+                          stiffness: 150,
+                        }}
+                        className="relative flex-shrink-0"
+                      >
+                        <div className="p-3 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={qrCodeUrl}
+                            alt="QR Code"
+                            className="w-24 h-24"
+                          />
+                        </div>
+                        <div className="absolute -top-1.5 -left-1.5 w-5 h-5 border-l-2 border-t-2 border-[#a855f7] rounded-tl-lg" />
+                        <div className="absolute -bottom-1.5 -right-1.5 w-5 h-5 border-r-2 border-b-2 border-[#a855f7] rounded-br-lg" />
+
+                        {/* Animated scan lines */}
+                        <m.div
+                          animate={{ y: [0, 96, 0] }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                          className="absolute left-3 right-3 h-0.5 bg-gradient-to-r from-transparent via-[#a855f7]/50 to-transparent"
+                        />
+                      </m.div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-white/90 mb-2">
+                          Scan QR Code
+                        </div>
+                        <p className="text-xs text-white/60 leading-relaxed mb-4">
+                          Share your achievement with friends or view it in the
+                          gallery
+                        </p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(shareUrl);
+                          }}
+                          data-export-hide="true"
+                          disabled={!uploadedUrl}
+                          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-lg"
+                          style={{
+                            color: uploadedUrl
+                              ? "#a855f7"
+                              : "rgba(255,255,255,0.5)",
+                            borderWidth: "1px",
+                            borderStyle: "solid",
+                            borderColor: uploadedUrl
+                              ? "#a855f740"
+                              : "rgba(255,255,255,0.1)",
+                            backgroundColor: uploadedUrl
+                              ? "#a855f720"
+                              : "rgba(255,255,255,0.05)",
+                          }}
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                          {uploadedUrl ? "Copy Link" : "Save First"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </m.div>
+              </div>
+
+              {/* Modern Footer */}
+              <div className="relative px-6 py-4 flex items-center justify-between border-t border-white/5 bg-gradient-to-r from-[#0a0e1a]/80 via-[#0f1520]/80 to-[#0a0e1a]/80 backdrop-blur-xl rounded-b-3xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#ff4655]/5 via-transparent to-[#a855f7]/5" />
+
+                <div className="relative flex items-center gap-3">
+                  <m.div
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      opacity: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="w-2 h-2 bg-[#ff4655] rounded-full"
+                  />
+                  <span className="text-xs font-bold text-white/60 uppercase tracking-wider">
+                    aiorreal.fun
+                  </span>
+                </div>
+
+                <div className="relative flex items-center gap-3">
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                    Powered by
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-4 w-auto opacity-50 hover:opacity-80 transition-all duration-300 hover:scale-110">
+                      <Image
+                        src="/assets/images/logos/cloud9-logo.png"
+                        alt="Cloud9"
+                        width={40}
+                        height={16}
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="w-px h-4 bg-white/20" />
+                    <div className="relative h-4 w-auto opacity-50 hover:opacity-80 transition-all duration-300 hover:scale-110">
+                      <Image
+                        src="/assets/images/logos/jetbrains-logo.png"
+                        alt="JetBrains"
+                        width={45}
+                        height={16}
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modern Action Buttons */}
+            <div className="mt-6 space-y-4" data-export-hide="true">
+              {uploadedUrl && (
+                <m.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className="relative text-center p-4 rounded-2xl border border-[#10b981]/40 bg-gradient-to-r from-[#10b981]/15 via-[#10b981]/10 to-[#10b981]/5 shadow-lg overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                  <div className="relative flex items-center justify-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-[#10b981]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <p className="text-sm font-bold text-[#10b981] uppercase tracking-wider">
+                      Saved to Gallery
+                    </p>
+                  </div>
+                </m.div>
+              )}
+
+              <m.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                whileHover={{
+                  scale: uploadedUrl ? 1 : 1.02,
+                  y: uploadedUrl ? 0 : -2,
+                }}
+                whileTap={{ scale: uploadedUrl ? 1 : 0.98 }}
+                onClick={startCamera}
+                disabled={!!uploadedUrl}
+                className="w-full py-4 rounded-2xl border border-white/10 bg-gradient-to-br from-[#1a2332]/80 to-[#0f1923]/80 hover:from-[#222d3d]/90 hover:to-[#1a2332]/90 text-white font-bold uppercase text-sm tracking-wider transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-2xl backdrop-blur-sm relative overflow-hidden group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-[#1a2332]/80 disabled:hover:to-[#0f1923]/80"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-[#a855f7]/0 via-[#a855f7]/10 to-[#a855f7]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <svg
+                  className="w-5 h-5 relative z-10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                <span className="relative z-10">
+                  {selfieData ? "Retake Photo" : "Add Photo"}
+                </span>
+              </m.button>
+
+              <div className="grid grid-cols-2 gap-4">
+                <m.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={downloadCard}
+                  disabled={isDownloading}
+                  className="py-4 rounded-2xl border border-white/10 bg-gradient-to-br from-[#1a2332]/80 to-[#0f1923]/80 hover:from-[#222d3d]/90 hover:to-[#1a2332]/90 text-white font-bold uppercase text-xs tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-2xl backdrop-blur-sm relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#3b82f6]/0 via-[#3b82f6]/10 to-[#3b82f6]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    {isDownloading ? "Saving..." : "Download"}
+                  </div>
+                </m.button>
+
+                <m.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={uploadCard}
+                  disabled={isUploading || !!uploadedUrl}
+                  className="py-4 rounded-2xl border border-[#10b981]/40 bg-gradient-to-br from-[#10b981]/20 to-[#10b981]/5 hover:from-[#10b981]/30 hover:to-[#10b981]/10 text-[#10b981] font-bold uppercase text-xs tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-2xl backdrop-blur-sm relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    {uploadedUrl ? (
+                      <>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Saved!
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                        {isUploading ? "Saving..." : "Save"}
+                      </>
+                    )}
+                  </div>
+                </m.button>
+              </div>
+
+              <m.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                whileHover={{ scale: 1.03, y: -3 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onPlayAgain}
+                className="w-full py-5 rounded-2xl bg-gradient-to-r from-[#ff4655] via-[#ff5565] to-[#ff4655] hover:from-[#ff5565] hover:via-[#ff6675] hover:to-[#ff5565] text-white font-black uppercase text-base tracking-wider transition-all duration-300 shadow-[0_10px_40px_-10px_rgba(255,70,85,0.5)] hover:shadow-[0_20px_60px_-10px_rgba(255,70,85,0.7)] relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <div className="relative z-10 flex items-center justify-center gap-3">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Play Again
+                </div>
+              </m.button>
+
+              <m.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Link
+                  href="/leaderboard"
+                  className="block text-center pt-3 group"
+                >
+                  <span className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white/90 transition-all duration-300 font-semibold uppercase tracking-wider group-hover:gap-3">
+                    View Leaderboard
+                    <svg
+                      className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </span>
+                </Link>
+              </m.div>
+            </div>
           </m.div>
         )}
       </AnimatePresence>

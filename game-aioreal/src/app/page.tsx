@@ -184,16 +184,14 @@ export default function Home() {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-3"
               >
-                <div
-                  className="relative p-2 clip-tactical-sm"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(0, 238, 255, 0.15), rgba(255, 70, 85, 0.15))",
-                  }}
-                >
-                  <span className="text-white font-black text-sm tracking-wider">
-                    AI?R
-                  </span>
+                <div className="relative w-10 h-10 rounded-lg overflow-hidden">
+                  <Image
+                    src="/assets/logo/aiorreal_logo.jpg"
+                    alt="AI or Real Logo"
+                    width={40}
+                    height={40}
+                    className="object-cover"
+                  />
                 </div>
                 <div className="hidden sm:block">
                   <div className="text-[10px] font-black text-[#ff4655]/60 uppercase tracking-[0.2em]">
@@ -211,10 +209,10 @@ export default function Home() {
                 className="flex items-center gap-4"
               >
                 <Link
-                  href="/leaderboard"
+                  href="/gallery"
                   className="text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] text-white/40 hover:text-[#00eeff] transition-colors"
                 >
-                  Leaderboard
+                  Gallery
                 </Link>
                 <div className="flex items-center gap-1">
                   <div className="w-1 h-1 rotate-45 bg-[#ff4655]" />
@@ -315,50 +313,96 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.7 }}
                 className="mt-10"
               >
-                <Link href="/game">
-                  <m.button
-                    whileHover={{ scale: 1.03, y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="group relative px-12 sm:px-16 py-5 sm:py-6 text-white font-black uppercase tracking-[0.15em] text-sm sm:text-base overflow-hidden cursor-pointer clip-skew"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(255, 70, 85, 0.9), rgba(0, 238, 255, 0.9))",
-                      boxShadow:
-                        "0 0 40px rgba(255, 70, 85, 0.3), 0 0 60px rgba(0, 238, 255, 0.2)",
-                    }}
-                  >
-                    <m.div
-                      animate={{ x: ["-100%", "200%"] }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"
-                    />
-                    <span className="relative z-10 flex items-center gap-3">
-                      <svg
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Enter The Arena
-                    </span>
-                    <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Link href="/game">
+                    <m.button
+                      whileHover={{ scale: 1.03, y: -2 }}
+                      whileTap={{ scale: 0.97 }}
+                      className="group relative px-12 sm:px-16 py-5 sm:py-6 text-white font-black uppercase tracking-[0.15em] text-sm sm:text-base overflow-hidden cursor-pointer clip-skew"
                       style={{
                         background:
-                          "linear-gradient(135deg, rgba(0, 238, 255, 0.9), rgba(255, 70, 85, 0.9))",
+                          "linear-gradient(135deg, rgba(255, 70, 85, 0.9), rgba(0, 238, 255, 0.9))",
+                        boxShadow:
+                          "0 0 40px rgba(255, 70, 85, 0.3), 0 0 60px rgba(0, 238, 255, 0.2)",
                       }}
-                    />
-                  </m.button>
-                </Link>
+                    >
+                      <m.div
+                        animate={{ x: ["-100%", "200%"] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                        className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"
+                      />
+                      <span className="relative z-10 flex items-center gap-3">
+                        <svg
+                          className="h-5 w-5"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        Play The Game
+                      </span>
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, rgba(0, 238, 255, 0.9), rgba(255, 70, 85, 0.9))",
+                        }}
+                      />
+                    </m.button>
+                  </Link>
+                  <Link href="/leaderboard">
+                    <m.button
+                      whileHover={{ scale: 1.03, y: -2 }}
+                      whileTap={{ scale: 0.97 }}
+                      className="group relative px-12 sm:px-16 py-5 sm:py-6 text-white font-black uppercase tracking-[0.15em] text-sm sm:text-base overflow-hidden cursor-pointer clip-skew"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(16, 185, 129, 0.9))",
+                        boxShadow:
+                          "0 0 40px rgba(168, 85, 247, 0.3), 0 0 60px rgba(16, 185, 129, 0.2)",
+                      }}
+                    >
+                      <m.div
+                        animate={{ x: ["-100%", "200%"] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                        className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"
+                      />
+                      <span className="relative z-10 flex items-center gap-3">
+                        <svg
+                          className="h-5 w-5"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M3 3a1 1 0 011-1h2a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V3zm6 4a1 1 0 011-1h2a1 1 0 011 1v10a1 1 0 01-1 1h-2a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v13a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        Leaderboard
+                      </span>
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(168, 85, 247, 0.9))",
+                        }}
+                      />
+                    </m.button>
+                  </Link>
+                </div>
                 <p className="text-slate-500 text-[10px] sm:text-xs mt-4 font-black uppercase tracking-[0.15em]">
                   Mouse-only controls &bull; Under 2 minutes
                 </p>
@@ -426,7 +470,8 @@ export default function Home() {
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-1 rotate-45 bg-[#ff4655]" />
                   <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">
-                    &copy; 2026 Cloud9 x JetBrains Hackathon &mdash; aioreal.fun
+                    &copy; 2026 Cloud9 x JetBrains Hackathon &mdash;
+                    aiorreal.fun
                   </span>
                   <div className="w-1 h-1 rotate-45 bg-[#00eeff]" />
                 </div>
