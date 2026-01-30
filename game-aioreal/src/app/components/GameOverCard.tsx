@@ -43,8 +43,10 @@ export default function GameOverCard({
 }: GameOverCardProps) {
   const correctCount = results.filter((r) => r.correct).length;
   const accuracy = Math.round((correctCount / results.length) * 100);
+  const TIME_PER_IMAGE = 2;
   const avgTime =
-    results.reduce((sum, r) => sum + (5 - r.timeLeft), 0) / results.length;
+    results.reduce((sum, r) => sum + (TIME_PER_IMAGE - r.timeLeft), 0) /
+    results.length;
   const bestStreak = results.reduce(
     (acc, r) => {
       if (r.correct) {

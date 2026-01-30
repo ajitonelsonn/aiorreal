@@ -37,7 +37,7 @@ type GamePhase =
   | "feedback"
   | "gameover";
 
-const TIME_PER_IMAGE = 5;
+const TIME_PER_IMAGE = 2;
 
 export default function GamePage() {
   // Registration
@@ -149,7 +149,9 @@ export default function GamePage() {
     try {
       const res = await fetch("/api/images");
       const data = await res.json();
-      setImages(data.images);
+      // Shuffle images randomly on client side too
+      const shuffled = [...data.images].sort(() => Math.random() - 0.5);
+      setImages(shuffled);
 
       // Preload all images into browser cache
       await preloadImages(data.images);
@@ -227,9 +229,12 @@ export default function GamePage() {
 
       let points = 0;
       if (correct) {
-        const speedBonus = Math.round((timeLeft / TIME_PER_IMAGE) * 50);
-        const streakBonus = streak * 10;
-        points = 100 + speedBonus + streakBonus;
+        // Speed bonus: faster answer = more points (0-100 range)
+        const speedRatio = timeLeft / TIME_PER_IMAGE;
+        const speedBonus = Math.round(speedRatio * 100);
+        // Streak multiplier: 1x, 1.2x, 1.5x, 2x, 2.5x...
+        const streakMultiplier = 1 + streak * 0.25;
+        points = Math.round((100 + speedBonus) * streakMultiplier);
         setStreak((s) => s + 1);
         playCorrect();
         if (streak >= 2) playCoin();
@@ -279,9 +284,15 @@ export default function GamePage() {
     try {
       const correctCount = results.filter((r) => r.correct).length;
       const accuracy = (correctCount / results.length) * 100;
+      // Average response time (TIME_PER_IMAGE - timeLeft = how long player took)
+      const answeredResults = results.filter((r) => r.timeLeft > 0);
       const avgTime =
-        results.reduce((sum, r) => sum + (TIME_PER_IMAGE - r.timeLeft), 0) /
-        results.length;
+        answeredResults.length > 0
+          ? answeredResults.reduce(
+              (sum, r) => sum + (TIME_PER_IMAGE - r.timeLeft),
+              0,
+            ) / answeredResults.length
+          : TIME_PER_IMAGE;
       const res = await fetch("/api/game/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -322,10 +333,20 @@ export default function GamePage() {
   useEffect(() => {
     if (phase !== "playing" || !imageReady) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "a" || e.key === "A" || e.key === "1" || e.key === "ArrowLeft") {
+      if (
+        e.key === "a" ||
+        e.key === "A" ||
+        e.key === "1" ||
+        e.key === "ArrowLeft"
+      ) {
         playClick();
         handleAnswer(true);
-      } else if (e.key === "r" || e.key === "R" || e.key === "2" || e.key === "ArrowRight") {
+      } else if (
+        e.key === "r" ||
+        e.key === "R" ||
+        e.key === "2" ||
+        e.key === "ArrowRight"
+      ) {
         playClick();
         handleAnswer(false);
       }
@@ -753,7 +774,7 @@ export default function GamePage() {
                             icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
                           },
                           {
-                            v: "5s",
+                            v: "2s",
                             l: "Per Image",
                             c: "#ff4655",
                             icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
@@ -999,10 +1020,14 @@ export default function GamePage() {
                         <div
                           key={i}
                           className="w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: r.correct ? "#10b981" : "#ff4655" }}
+                          style={{
+                            backgroundColor: r.correct ? "#10b981" : "#ff4655",
+                          }}
                         />
                       ))}
-                      {Array.from({ length: images.length - results.length }).map((_, i) => (
+                      {Array.from({
+                        length: images.length - results.length,
+                      }).map((_, i) => (
                         <div
                           key={`empty-${i}`}
                           className="w-1.5 h-1.5 rounded-full bg-white/10"

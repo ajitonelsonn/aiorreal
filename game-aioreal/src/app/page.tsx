@@ -300,7 +300,7 @@ export default function Home() {
                   <div className="w-16 sm:w-24 h-px bg-gradient-to-l from-transparent to-[#00eeff]/50" />
                 </div>
                 <p className="text-sm sm:text-base text-slate-400 max-w-md mx-auto leading-relaxed">
-                  Test your perception in this fast-paced arena. 12 images. 5
+                  Test your perception in this fast-paced arena. 12 images. 2
                   seconds each. Can you tell AI-generated images from real
                   photographs?
                 </p>
@@ -417,7 +417,7 @@ export default function Home() {
               >
                 {[
                   { label: "Images", value: "12", color: "#00eeff" },
-                  { label: "Per Image", value: "5s", color: "#ff4655" },
+                  { label: "Per Image", value: "2s", color: "#ff4655" },
                   { label: "Controls", value: "Click", color: "#10b981" },
                 ].map((stat) => (
                   <div
