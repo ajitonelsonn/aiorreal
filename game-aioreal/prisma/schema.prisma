@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model GameImage {
+  id          String   @id @default(cuid())
+  url         String   @unique
+  isAi        Boolean
+  category    String?
+  description String?
+  source      String?
+  createdAt   DateTime @default(now())
+
+  @@index([isAi])
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  username  String
+  country   String?
+  createdAt DateTime @default(now())
+  scores    Score[]
+}
+
+model Score {
+  id           String   @id @default(cuid())
+  playerId     String
+  player       Player   @relation(fields: [playerId], references: [id])
+  totalScore   Int
+  correctCount Int
+  totalImages  Int
+  accuracy     Float
+  avgTime      Float?
+  createdAt    DateTime @default(now())
+
+  @@index([totalScore])
+  @@index([createdAt])
+}
+
+model Country {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @default("US")
+  flag      String
+  createdAt DateTime @default(now())
+
+  @@index([name])
+}
