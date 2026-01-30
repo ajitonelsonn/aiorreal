@@ -12,3 +12,5 @@
 idea/.env
 
 imag/
+
+game-aioreal/node_modules/*
