@@ -12,10 +12,12 @@
     "db:seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.978.0",
     "@prisma/client": "^6.19.2",
     "@tailwindcss/postcss": "^4.1.18",
     "country-flag-icons": "^1.6.12",
     "framer-motion": "^12.29.2",
+    "html-to-image": "^1.11.13",
     "next": "^16.1.6",
     "postcss": "^8.5.6",
     "react": "^19.2.4",

@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import GameOverCard from "../components/GameOverCard";
 import { useMusic } from "../components/MusicProvider";
+import { useSfx } from "../hooks/useSfx";
 
 interface GameImage {
   id: string;
@@ -64,10 +65,13 @@ export default function GamePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
   const [imageReady, setImageReady] = useState(false);
+  const [lastPoints, setLastPoints] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
   const { playGameMusic, playVictoryMusic, stopAllMusic } = useMusic();
+  const { playClick, playCorrect, playWrong, playTick, playGameOver, playWhoosh, playCoin } = useSfx();
+  const lastTickRef = useRef(TIME_PER_IMAGE);
 
   // Load countries from DB
   useEffect(() => {
@@ -110,6 +114,7 @@ export default function GamePage() {
     setCountry(c.name);
     setCountrySearch(c.name);
     setShowCountryDropdown(false);
+    playClick();
   };
 
   // Preload all images into browser cache
@@ -135,6 +140,7 @@ export default function GamePage() {
   // Start game
   const startGame = async () => {
     if (!username.trim()) return;
+    playClick();
     localStorage.setItem("aioreal_username", username);
     localStorage.setItem("aioreal_country", country);
     localStorage.setItem("aioreal_country_search", countrySearch);
@@ -164,8 +170,10 @@ export default function GamePage() {
     if (countdownNum <= 0) {
       setPhase("playing");
       startTimeRef.current = Date.now();
+      playWhoosh();
       return;
     }
+    playTick();
     const t = setTimeout(() => setCountdownNum((n) => n - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, countdownNum]);
@@ -180,11 +188,21 @@ export default function GamePage() {
     if (phase !== "playing" || !imageReady) return;
     setTimeLeft(TIME_PER_IMAGE);
     startTimeRef.current = Date.now();
+    lastTickRef.current = TIME_PER_IMAGE;
 
     timerRef.current = setInterval(() => {
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
       const remaining = Math.max(0, TIME_PER_IMAGE - elapsed);
       setTimeLeft(remaining);
+
+      // Tick sound at each second when <= 3s
+      const currentSecond = Math.ceil(remaining);
+      const lastSecond = Math.ceil(lastTickRef.current);
+      if (currentSecond !== lastSecond && currentSecond <= 3 && currentSecond > 0) {
+        playTick();
+      }
+      lastTickRef.current = remaining;
+
       if (remaining <= 0) {
         clearInterval(timerRef.current!);
         handleAnswer(null);
@@ -211,10 +229,14 @@ export default function GamePage() {
         const streakBonus = streak * 10;
         points = 100 + speedBonus + streakBonus;
         setStreak((s) => s + 1);
+        playCorrect();
+        if (streak >= 2) playCoin();
       } else {
         setStreak(0);
+        playWrong();
       }
       setScore((s) => s + points);
+      setLastPoints(points);
 
       const result: GameResult = {
         imageId: image.id,
@@ -238,9 +260,11 @@ export default function GamePage() {
     const t = setTimeout(() => {
       if (currentIndex + 1 >= images.length) {
         setPhase("gameover");
+        playGameOver();
       } else {
         setCurrentIndex((i) => i + 1);
         setPhase("playing");
+        playWhoosh();
       }
       setFeedback(null);
     }, 1200);
@@ -298,13 +322,13 @@ export default function GamePage() {
   const timerPercent = (timeLeft / TIME_PER_IMAGE) * 100;
   const timerColor =
     timeLeft > 3 ? "#00eeff" : timeLeft > 1.5 ? "#f59e0b" : "#ff4655";
+  const isTimerCritical = timeLeft <= 1.5;
 
   return (
     <LazyMotion features={domAnimation} strict>
       <div className="min-h-screen bg-[#020617] text-slate-50 overflow-hidden relative">
         {/* Tactical background */}
         <div className="fixed inset-0 z-0">
-          {/* Base background image */}
           <div className="absolute inset-0 opacity-20 mix-blend-overlay">
             <Image
               src="/assets/images/backgrounds/valorant_.webp"
@@ -316,7 +340,6 @@ export default function GamePage() {
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-[#020617]/80 to-[#020617]" />
-
           <div className="absolute inset-0 bg-hex opacity-[0.015]" />
           <div className="absolute inset-0 bg-scanlines" />
           <m.div
@@ -328,7 +351,6 @@ export default function GamePage() {
                 "linear-gradient(90deg, transparent, #ff4655, #fd4556, transparent)",
             }}
           />
-          {/* Orbs */}
           <m.div
             animate={{ scale: [1, 1.3, 1], opacity: [0.08, 0.15, 0.08] }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -364,6 +386,7 @@ export default function GamePage() {
                 {/* Back */}
                 <Link
                   href="/"
+                  onClick={playClick}
                   className="group relative px-4 py-2 inline-flex items-center gap-3 mb-6"
                   style={{
                     background:
@@ -392,7 +415,6 @@ export default function GamePage() {
                     <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#00eeff]/5 blur-2xl" />
                     <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-[#ff4655]/5 blur-2xl" />
                     <div className="relative z-10">
-                      {/* Tactical badge */}
                       <div
                         className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 clip-skew"
                         style={{
@@ -409,6 +431,7 @@ export default function GamePage() {
                         </span>
                       </div>
                       <h2 className="text-2xl font-black">Enter the Arena</h2>
+                      <p className="text-[10px] text-white/30 mt-1 font-bold uppercase tracking-wider">Can you tell AI from reality?</p>
                     </div>
                   </div>
 
@@ -446,14 +469,12 @@ export default function GamePage() {
                           placeholder="Search country..."
                           className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-[#00eeff]/50 focus:ring-2 focus:ring-[#00eeff]/20 transition-all text-sm clip-tactical-sm"
                         />
-                        {/* Selected flag */}
                         {country && (
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg">
                             {countries.find((c) => c.name === country)?.flag}
                           </span>
                         )}
 
-                        {/* Dropdown */}
                         {showCountryDropdown && (
                           <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-[#0f172a] border border-white/10 rounded-lg shadow-2xl">
                             {filteredCountries.length === 0 ? (
@@ -560,7 +581,6 @@ export default function GamePage() {
               className="relative z-10 min-h-screen flex items-center justify-center"
             >
               <div className="text-center w-full max-w-xs">
-                {/* Tactical badge */}
                 <div
                   className="inline-flex items-center gap-2 px-4 py-2 mb-6 clip-skew"
                   style={{
@@ -581,7 +601,6 @@ export default function GamePage() {
                   Downloading images...
                 </p>
 
-                {/* Progress bar */}
                 <div className="h-2 bg-white/5 rounded-full overflow-hidden mb-3 clip-tactical-sm">
                   <m.div
                     className="h-full bg-gradient-to-r from-[#ff4655] to-[#00eeff] rounded-full"
@@ -616,11 +635,22 @@ export default function GamePage() {
                     transition={{ duration: 0.3 }}
                   >
                     {countdownNum > 0 ? (
-                      <div className="text-8xl sm:text-9xl font-black gradient-text">
-                        {countdownNum}
-                      </div>
+                      <>
+                        <div className="text-8xl sm:text-9xl font-black gradient-text drop-shadow-[0_0_40px_rgba(0,238,255,0.3)]">
+                          {countdownNum}
+                        </div>
+                        {/* Pulse ring */}
+                        <m.div
+                          initial={{ scale: 0.8, opacity: 0.5 }}
+                          animate={{ scale: 2, opacity: 0 }}
+                          transition={{ duration: 0.8 }}
+                          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                        >
+                          <div className="w-32 h-32 rounded-full border-2 border-[#00eeff]/30" />
+                        </m.div>
+                      </>
                     ) : (
-                      <div className="text-5xl sm:text-6xl font-black text-[#00eeff]">
+                      <div className="text-5xl sm:text-6xl font-black text-[#00eeff] drop-shadow-[0_0_40px_rgba(0,238,255,0.5)]">
                         GO!
                       </div>
                     )}
@@ -644,11 +674,12 @@ export default function GamePage() {
             >
               {/* Top HUD bar */}
               <div className="relative px-4 sm:px-8 py-3">
-                <div className="absolute inset-0 bg-[#020617]/70 backdrop-blur-md border-b border-white/5" />
+                <div className="absolute inset-0 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5" />
                 <div className="relative z-10 max-w-4xl mx-auto">
                   {/* Score + Image counter + Streak */}
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      {/* Image counter */}
                       <div
                         className="clip-tactical-sm px-3 py-1.5"
                         style={{
@@ -660,29 +691,57 @@ export default function GamePage() {
                           {currentIndex + 1}/{images.length}
                         </span>
                       </div>
-                      {streak > 1 && (
-                        <m.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="clip-tactical-sm px-3 py-1.5"
-                          style={{
-                            background: "rgba(245, 158, 11, 0.1)",
-                            border: "1px solid rgba(245, 158, 11, 0.3)",
-                          }}
-                        >
-                          <span className="text-[9px] font-black text-amber-400 uppercase tracking-[0.15em]">
-                            {streak}x Streak
-                          </span>
-                        </m.div>
-                      )}
+                      {/* Streak badge */}
+                      <AnimatePresence>
+                        {streak > 1 && (
+                          <m.div
+                            initial={{ scale: 0, x: -10 }}
+                            animate={{ scale: 1, x: 0 }}
+                            exit={{ scale: 0, x: -10 }}
+                            className="clip-tactical-sm px-3 py-1.5 flex items-center gap-1.5"
+                            style={{
+                              background: "rgba(245, 158, 11, 0.12)",
+                              border: "1px solid rgba(245, 158, 11, 0.3)",
+                              boxShadow: "0 0 15px rgba(245, 158, 11, 0.1)",
+                            }}
+                          >
+                            <span className="text-amber-400 text-xs">&#x1F525;</span>
+                            <span className="text-[9px] font-black text-amber-400 uppercase tracking-[0.15em]">
+                              {streak}x Streak
+                            </span>
+                          </m.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-black text-white/30 uppercase tracking-wider">
-                        Score
-                      </span>
-                      <span className="text-xl font-black gradient-text tabular-nums">
-                        {score}
-                      </span>
+
+                    {/* Score display */}
+                    <div className="flex items-center gap-3">
+                      <AnimatePresence>
+                        {lastPoints > 0 && feedback && (
+                          <m.span
+                            key={`pts-${currentIndex}`}
+                            initial={{ opacity: 1, y: 0 }}
+                            animate={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 1 }}
+                            className="text-xs font-black text-emerald-400"
+                          >
+                            +{lastPoints}
+                          </m.span>
+                        )}
+                      </AnimatePresence>
+                      <div className="text-right">
+                        <span className="text-[9px] font-black text-white/30 uppercase tracking-wider block">
+                          Score
+                        </span>
+                        <m.span
+                          key={score}
+                          initial={{ scale: 1.3 }}
+                          animate={{ scale: 1 }}
+                          className="text-xl font-black gradient-text tabular-nums block"
+                        >
+                          {score}
+                        </m.span>
+                      </div>
                     </div>
                   </div>
 
@@ -697,23 +756,25 @@ export default function GamePage() {
                   </div>
 
                   {/* Timer bar */}
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className={`h-2 bg-white/5 rounded-full overflow-hidden ${isTimerCritical ? "animate-pulse" : ""}`}>
                     <div
                       className="h-full rounded-full transition-all duration-100 ease-linear"
                       style={{
                         width: `${timerPercent}%`,
                         backgroundColor: timerColor,
-                        boxShadow: `0 0 10px ${timerColor}40`,
+                        boxShadow: `0 0 ${isTimerCritical ? "20px" : "10px"} ${timerColor}60`,
                       }}
                     />
                   </div>
                   <div className="flex justify-between mt-1.5">
-                    <span
-                      className="text-xs font-black tabular-nums"
+                    <m.span
+                      animate={isTimerCritical ? { scale: [1, 1.15, 1] } : {}}
+                      transition={isTimerCritical ? { duration: 0.5, repeat: Infinity } : {}}
+                      className="text-sm font-black tabular-nums"
                       style={{ color: timerColor }}
                     >
                       {timeLeft.toFixed(1)}s
-                    </span>
+                    </m.span>
                     <span className="text-[9px] text-white/20 font-black uppercase tracking-wider">
                       Time Remaining
                     </span>
@@ -727,13 +788,13 @@ export default function GamePage() {
                   {/* PORTRAIT Image container (3:4 ratio = 768x1024) */}
                   <m.div
                     key={currentImage.id}
-                    initial={{ opacity: 0, scale: 1.02 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, scale: 1.05, rotateY: 10 }}
+                    animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                     className="relative w-full portrait-image rounded-2xl overflow-hidden mb-5 clip-tactical"
                     style={{
                       border: "1px solid rgba(255,255,255,0.08)",
-                      boxShadow: "0 0 40px rgba(0,0,0,0.5)",
+                      boxShadow: `0 0 60px rgba(0,0,0,0.6), inset 0 0 60px rgba(0,0,0,0.2)`,
                     }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -746,34 +807,54 @@ export default function GamePage() {
                     {/* Loading indicator until image renders */}
                     {!imageReady && (
                       <div className="absolute inset-0 flex items-center justify-center bg-[#020617]">
-                        <div className="w-8 h-8 border-3 border-white/10 border-t-[#00eeff] rounded-full animate-spin" />
+                        <div className="text-center">
+                          <div className="w-10 h-10 border-3 border-white/10 border-t-[#00eeff] rounded-full animate-spin mx-auto mb-3" />
+                          <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Loading...</span>
+                        </div>
                       </div>
                     )}
 
                     {/* Corner scan HUD */}
-                    <div className="absolute top-3 left-3 w-6 h-6 pointer-events-none opacity-40">
+                    <div className="absolute top-3 left-3 w-8 h-8 pointer-events-none opacity-50">
                       <div className="absolute top-0 left-0 w-full h-[1px] bg-[#00eeff]" />
                       <div className="absolute top-0 left-0 h-full w-[1px] bg-[#00eeff]" />
                     </div>
-                    <div className="absolute top-3 right-3 w-6 h-6 pointer-events-none opacity-40">
+                    <div className="absolute top-3 right-3 w-8 h-8 pointer-events-none opacity-50">
                       <div className="absolute top-0 right-0 w-full h-[1px] bg-[#ff4655]" />
                       <div className="absolute top-0 right-0 h-full w-[1px] bg-[#ff4655]" />
                     </div>
-                    <div className="absolute bottom-3 left-3 w-6 h-6 pointer-events-none opacity-40">
+                    <div className="absolute bottom-3 left-3 w-8 h-8 pointer-events-none opacity-50">
                       <div className="absolute bottom-0 left-0 w-full h-[1px] bg-[#00eeff]" />
                       <div className="absolute bottom-0 left-0 h-full w-[1px] bg-[#00eeff]" />
                     </div>
-                    <div className="absolute bottom-3 right-3 w-6 h-6 pointer-events-none opacity-40">
+                    <div className="absolute bottom-3 right-3 w-8 h-8 pointer-events-none opacity-50">
                       <div className="absolute bottom-0 right-0 w-full h-[1px] bg-[#ff4655]" />
                       <div className="absolute bottom-0 right-0 h-full w-[1px] bg-[#ff4655]" />
                     </div>
 
                     {/* Scan label */}
-                    <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/40 backdrop-blur-sm rounded-full">
-                      <span className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em]">
+                    <m.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-black/50 backdrop-blur-md rounded-full border border-white/10"
+                    >
+                      <span className="text-[8px] font-black text-white/60 uppercase tracking-[0.2em]">
                         {imageReady ? "Analyzing Image" : "Loading Image..."}
                       </span>
-                    </div>
+                    </m.div>
+
+                    {/* Scan line animation over image */}
+                    {imageReady && phase === "playing" && (
+                      <m.div
+                        animate={{ y: ["-100%", "200%"] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        className="absolute left-0 right-0 h-[2px] opacity-20 pointer-events-none"
+                        style={{
+                          background: "linear-gradient(90deg, transparent, #00eeff, transparent)",
+                          boxShadow: "0 0 10px #00eeff40",
+                        }}
+                      />
+                    )}
 
                     {/* Feedback overlay */}
                     <AnimatePresence>
@@ -783,6 +864,9 @@ export default function GamePage() {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           className={`absolute inset-0 flex items-center justify-center ${feedback.correct ? "bg-emerald-500/30" : "bg-red-500/30"}`}
+                          style={{
+                            backdropFilter: "blur(2px)",
+                          }}
                         >
                           <m.div
                             initial={{ scale: 0 }}
@@ -790,8 +874,16 @@ export default function GamePage() {
                             transition={{ type: "spring", bounce: 0.5 }}
                             className="text-center"
                           >
-                            <div
+                            <m.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", bounce: 0.6, delay: 0.1 }}
                               className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 ${feedback.correct ? "bg-emerald-500" : "bg-red-500"}`}
+                              style={{
+                                boxShadow: feedback.correct
+                                  ? "0 0 40px rgba(16, 185, 129, 0.5)"
+                                  : "0 0 40px rgba(255, 70, 85, 0.5)",
+                              }}
                             >
                               {feedback.correct ? (
                                 <svg
@@ -822,36 +914,65 @@ export default function GamePage() {
                                   />
                                 </svg>
                               )}
-                            </div>
-                            <p className="text-white font-black text-lg uppercase tracking-wider">
+                            </m.div>
+                            <p className="text-white font-black text-xl uppercase tracking-wider drop-shadow-lg">
                               {feedback.correct ? "Correct!" : "Wrong!"}
                             </p>
-                            <p className="text-white/60 text-sm mt-1">
+                            <p className="text-white/70 text-sm mt-1 font-bold">
                               This was{" "}
-                              {feedback.answer
-                                ? "AI Generated"
-                                : "A Real Photo"}
+                              <span className={feedback.answer ? "text-[#ff4655]" : "text-[#00eeff]"}>
+                                {feedback.answer ? "AI Generated" : "A Real Photo"}
+                              </span>
                             </p>
+                            {feedback.correct && lastPoints > 0 && (
+                              <m.p
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-emerald-300 font-black text-lg mt-2"
+                              >
+                                +{lastPoints} pts
+                              </m.p>
+                            )}
                           </m.div>
                         </m.div>
                       )}
                     </AnimatePresence>
                   </m.div>
 
+                  {/* Question label */}
+                  {phase === "playing" && imageReady && (
+                    <m.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-3"
+                    >
+                      Is this image AI generated or a real photo?
+                    </m.p>
+                  )}
+
                   {/* Answer buttons */}
                   {phase === "playing" && imageReady && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <m.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="grid grid-cols-2 gap-3"
+                    >
                       <m.button
-                        whileHover={{ scale: 1.03, y: -2 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleAnswer(true)}
-                        className="py-5 font-black uppercase tracking-[0.1em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative"
+                        whileHover={{ scale: 1.04, y: -3 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          playClick();
+                          handleAnswer(true);
+                        }}
+                        className="py-5 font-black uppercase tracking-[0.1em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
                         style={{
                           background:
-                            "linear-gradient(135deg, rgba(255, 70, 85, 0.1), rgba(255, 70, 85, 0.05))",
+                            "linear-gradient(135deg, rgba(255, 70, 85, 0.12), rgba(255, 70, 85, 0.05))",
                           border: "1px solid rgba(255, 70, 85, 0.3)",
                           color: "#ff4655",
-                          boxShadow: "0 0 20px rgba(255, 70, 85, 0.05)",
+                          boxShadow: "0 0 20px rgba(255, 70, 85, 0.08)",
                         }}
                       >
                         <m.div
@@ -863,6 +984,7 @@ export default function GamePage() {
                           }}
                           className="absolute inset-y-0 w-1/4 bg-gradient-to-r from-transparent via-[#ff4655]/10 to-transparent pointer-events-none"
                         />
+                        <div className="absolute inset-0 bg-[#ff4655]/0 group-hover:bg-[#ff4655]/5 transition-colors pointer-events-none" />
                         <span className="relative z-10 flex items-center justify-center gap-2">
                           <svg
                             className="w-5 h-5"
@@ -882,16 +1004,19 @@ export default function GamePage() {
                       </m.button>
 
                       <m.button
-                        whileHover={{ scale: 1.03, y: -2 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleAnswer(false)}
-                        className="py-5 font-black uppercase tracking-[0.1em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative"
+                        whileHover={{ scale: 1.04, y: -3 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          playClick();
+                          handleAnswer(false);
+                        }}
+                        className="py-5 font-black uppercase tracking-[0.1em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
                         style={{
                           background:
-                            "linear-gradient(135deg, rgba(0, 238, 255, 0.1), rgba(0, 238, 255, 0.05))",
+                            "linear-gradient(135deg, rgba(0, 238, 255, 0.12), rgba(0, 238, 255, 0.05))",
                           border: "1px solid rgba(0, 238, 255, 0.3)",
                           color: "#00eeff",
-                          boxShadow: "0 0 20px rgba(0, 238, 255, 0.05)",
+                          boxShadow: "0 0 20px rgba(0, 238, 255, 0.08)",
                         }}
                       >
                         <m.div
@@ -904,6 +1029,7 @@ export default function GamePage() {
                           }}
                           className="absolute inset-y-0 w-1/4 bg-gradient-to-r from-transparent via-[#00eeff]/10 to-transparent pointer-events-none"
                         />
+                        <div className="absolute inset-0 bg-[#00eeff]/0 group-hover:bg-[#00eeff]/5 transition-colors pointer-events-none" />
                         <span className="relative z-10 flex items-center justify-center gap-2">
                           <svg
                             className="w-5 h-5"
@@ -927,7 +1053,7 @@ export default function GamePage() {
                           Real Photo
                         </span>
                       </m.button>
-                    </div>
+                    </m.div>
                   )}
                 </div>
               </div>
@@ -951,12 +1077,14 @@ export default function GamePage() {
                 rank={rank}
                 isSaving={isSaving}
                 onPlayAgain={() => {
+                  playClick();
                   setPhase("register");
                   setCurrentIndex(0);
                   setResults([]);
                   setScore(0);
                   setStreak(0);
                   setRank(null);
+                  setLastPoints(0);
                 }}
               />
             </m.div>
