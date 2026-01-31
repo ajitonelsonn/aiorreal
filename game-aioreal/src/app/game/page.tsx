@@ -7,6 +7,7 @@ import Link from "next/link";
 import GameOverCard from "../components/GameOverCard";
 import { useMusic } from "../components/MusicProvider";
 import { useSfx } from "../hooks/useSfx";
+import FlagIcon from "../components/FlagIcon";
 
 interface GameImage {
   id: string;
@@ -673,13 +674,16 @@ export default function GamePage() {
                             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
                           }}
                         />
-                        {country && (
+                        {country && countries.find((c) => c.name === country)?.code && (
                           <m.span
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-xl"
+                            className="absolute right-4 top-1/2 -translate-y-1/2"
                           >
-                            {countries.find((c) => c.name === country)?.flag}
+                            <FlagIcon 
+                              countryCode={countries.find((c) => c.name === country)?.code || ""} 
+                              size={24} 
+                            />
                           </m.span>
                         )}
                         <div
@@ -715,7 +719,9 @@ export default function GamePage() {
                                   onClick={() => selectCountry(c)}
                                   className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all text-left cursor-pointer border-b border-white/5 last:border-0 ${country === c.name ? "bg-[#00eeff]/15 border-l-2 border-l-[#00eeff]" : ""}`}
                                 >
-                                  <span className="text-lg">{c.flag}</span>
+                                  <span className="inline-block">
+                                    <FlagIcon countryCode={c.code} size={20} />
+                                  </span>
                                   <span className="text-sm text-white/90 font-medium">
                                     {c.name}
                                   </span>

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import FlagIcon from "./FlagIcon";
 
 interface GameResult {
   imageId: string;
@@ -113,12 +114,12 @@ export default function GameOverCard({
       .catch(console.error);
   }, []);
 
-  const getCountryFlag = (countryName: string | null) => {
+  const getCountryCode = (countryName: string | null) => {
     if (!countryName) return "";
     const found = countries.find(
       (c) => c.name === countryName || c.code === countryName,
     );
-    return found?.flag || "";
+    return found?.code || "";
   };
 
   const shareUrl =
@@ -589,9 +590,9 @@ export default function GameOverCard({
                         )}
                       </div>
                       {/* Country flag badge */}
-                      {getCountryFlag(country) && (
-                        <div className="absolute -bottom-1 -right-1 text-lg drop-shadow-lg">
-                          {getCountryFlag(country)}
+                      {getCountryCode(country) && (
+                        <div className="absolute -bottom-1 -right-1 drop-shadow-lg">
+                          <FlagIcon countryCode={getCountryCode(country)} size={24} />
                         </div>
                       )}
                     </m.div>

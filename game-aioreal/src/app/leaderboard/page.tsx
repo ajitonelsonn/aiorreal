@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import FlagIcon from "../components/FlagIcon";
 
 interface LeaderboardEntry {
   rank: number;
@@ -90,12 +91,12 @@ export default function LeaderboardPage() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const getFlag = (countryName: string | null) => {
+  const getCountryCode = (countryName: string | null) => {
     if (!countryName) return "";
     const found = countries.find(
       (c) => c.name === countryName || c.code === countryName,
     );
-    return found?.flag || "";
+    return found?.code || "";
   };
 
   const getGrade = (accuracy: number) => {
@@ -414,8 +415,10 @@ export default function LeaderboardPage() {
                     <div className="relative z-10">
                       <span className="text-2xl">{medalEmoji[podiumRank]}</span>
                       <p className="font-black text-sm mt-2 truncate">
-                        {entry.country && (
-                          <span className="mr-1">{getFlag(entry.country)}</span>
+                        {entry.country && getCountryCode(entry.country) && (
+                          <span className="mr-1 inline-block">
+                            <FlagIcon countryCode={getCountryCode(entry.country)} size={16} />
+                          </span>
                         )}
                         {entry.username}
                       </p>
@@ -514,9 +517,9 @@ export default function LeaderboardPage() {
                     {/* Player info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        {entry.country && (
-                          <span className="text-sm">
-                            {getFlag(entry.country)}
+                        {entry.country && getCountryCode(entry.country) && (
+                          <span className="inline-block">
+                            <FlagIcon countryCode={getCountryCode(entry.country)} size={18} />
                           </span>
                         )}
                         <span className="font-bold text-sm truncate">
