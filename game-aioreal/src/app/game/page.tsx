@@ -38,6 +38,11 @@ type GamePhase =
   | "gameover";
 
 const TIME_PER_IMAGE = 2;
+const HEROES = [
+  { src: "/assets/images/hero/Jett_Artwork_Full.webp", alt: "Jett" },
+  { src: "/assets/images/hero/Reyna_Artwork_Full.webp", alt: "Reyna" },
+  { src: "/assets/images/hero/Sage_Artwork_Full.webp", alt: "Sage" },
+];
 
 export default function GamePage() {
   // Registration
@@ -66,6 +71,7 @@ export default function GamePage() {
   const [loadProgress, setLoadProgress] = useState(0);
   const [imageReady, setImageReady] = useState(false);
   const [lastPoints, setLastPoints] = useState(0);
+  const [heroIndex, setHeroIndex] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -88,6 +94,15 @@ export default function GamePage() {
       .then((d) => setCountries(Array.isArray(d) ? d : []))
       .catch(console.error);
   }, []);
+
+  // Cycle hero images every 5 seconds during register phase
+  useEffect(() => {
+    if (phase !== "register") return;
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % HEROES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [phase]);
 
   // Close country dropdown on outside click
   useEffect(() => {
@@ -445,431 +460,324 @@ export default function GamePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative z-10 min-h-dvh flex items-center justify-center px-4"
+              className="relative z-10 min-h-dvh flex items-center justify-center"
             >
-              <m.div
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
-              >
-                {/* Back */}
-                <div className="flex items-center justify-between mb-6">
-                  <Link
-                    href="/"
-                    onClick={playClick}
-                    className="group relative px-4 py-2 inline-flex items-center gap-3"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(255, 70, 85, 0.1), transparent)",
-                      clipPath:
-                        "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
-                    }}
-                  >
-                    <span className="text-[#ff4655] text-lg font-black">
-                      &larr;
-                    </span>
-                    <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-white transition-colors">
-                      Back to Home
-                    </span>
-                  </Link>
-                  <div className="relative w-10 h-10 rounded-lg overflow-hidden">
-                    <Image
-                      src="/assets/logo/aiorreal_logo.jpg"
-                      alt="AI or Real Logo"
-                      width={40}
-                      height={40}
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
+              {/* Riot-style angular red accent — top right */}
+              <div
+                className="absolute top-0 right-0 w-1/2 h-full pointer-events-none hidden lg:block"
+                style={{
+                  background: "linear-gradient(135deg, transparent 40%, rgba(255, 70, 85, 0.15) 60%, rgba(255, 70, 85, 0.25) 100%)",
+                  clipPath: "polygon(30% 0, 100% 0, 100% 100%, 10% 100%)",
+                }}
+              />
 
-                <div className="glass rounded-2xl overflow-hidden glow-cyan clip-tactical relative">
-                  {/* Animated corner accents */}
-                  <div className="absolute top-0 left-0 w-24 h-24 pointer-events-none opacity-40">
-                    <m.div
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute top-0 left-0 w-16 h-[2px] bg-gradient-to-r from-[#ff4655] to-transparent"
-                    />
-                    <m.div
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                      className="absolute top-0 left-0 h-16 w-[2px] bg-gradient-to-b from-[#ff4655] to-transparent"
-                    />
-                  </div>
-                  <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none opacity-40">
-                    <m.div
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        delay: 0.25,
-                      }}
-                      className="absolute top-0 right-0 w-16 h-[2px] bg-gradient-to-l from-[#00eeff] to-transparent"
-                    />
-                    <m.div
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        delay: 0.75,
-                      }}
-                      className="absolute top-0 right-0 h-16 w-[2px] bg-gradient-to-b from-[#00eeff] to-transparent"
-                    />
-                  </div>
+              {/* Split layout container */}
+              <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center min-h-dvh lg:min-h-0 px-4 py-8 lg:py-0 gap-0 lg:gap-8">
 
-                  {/* Header gradient */}
-                  <div
-                    className="p-6 pb-4 text-center relative overflow-hidden"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(255, 70, 85, 0.15), rgba(0, 238, 255, 0.15))",
-                    }}
-                  >
-                    <m.div
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
-                      transition={{ duration: 4, repeat: Infinity }}
-                      className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#00eeff]/20 blur-3xl"
-                    />
-                    <m.div
-                      animate={{
-                        scale: [1.2, 1, 1.2],
-                        opacity: [0.1, 0.2, 0.1],
-                      }}
-                      transition={{ duration: 4, repeat: Infinity, delay: 2 }}
-                      className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-[#ff4655]/20 blur-3xl"
-                    />
-                    <div className="relative z-10">
+                {/* Left side — Jett character (hidden on mobile, shown on lg+) */}
+                <m.div
+                  initial={{ opacity: 0, x: -60 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.7, ease: "easeOut" }}
+                  className="hidden lg:flex flex-1 items-center justify-center relative"
+                >
+                  <div className="relative">
+                    {/* Glow behind character */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-80 h-80 rounded-full bg-[#00eeff]/10 blur-[100px]" />
+                    </div>
+                    <AnimatePresence mode="wait">
                       <m.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 mb-4 clip-skew"
+                        key={heroIndex}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.05 }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                      >
+                        <Image
+                          src={HEROES[heroIndex].src}
+                          alt={HEROES[heroIndex].alt}
+                          width={500}
+                          height={600}
+                          className="relative z-10 drop-shadow-[0_0_40px_rgba(0,238,255,0.2)] object-contain max-h-[80vh]"
+                          priority
+                        />
+                      </m.div>
+                    </AnimatePresence>
+                    {/* Character label */}
+                    <m.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
+                    >
+                      <div className="flex items-center gap-3 px-5 py-2.5 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#00eeff]/50">
+                          <Image
+                            src="/assets/logo/aiorreal_logo.jpg"
+                            alt="Logo"
+                            width={32}
+                            height={32}
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#00eeff]">AI or Real?</p>
+                          <p className="text-[8px] text-white/30 font-bold uppercase tracking-wider">Cloud9 x JetBrains</p>
+                        </div>
+                      </div>
+                    </m.div>
+                  </div>
+                </m.div>
+
+                {/* Right side — Form card */}
+                <m.div
+                  initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="w-full max-w-md lg:flex-shrink-0"
+                >
+                  {/* Back + Logo row */}
+                  <div className="flex items-center justify-between mb-5">
+                    <Link
+                      href="/"
+                      onClick={playClick}
+                      className="group relative px-4 py-2 inline-flex items-center gap-3"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(255, 70, 85, 0.1), transparent)",
+                        clipPath:
+                          "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                      }}
+                    >
+                      <span className="text-[#ff4655] text-lg font-black">
+                        &larr;
+                      </span>
+                      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-white transition-colors">
+                        Back to Home
+                      </span>
+                    </Link>
+                    <div className="relative w-10 h-10 rounded-lg overflow-hidden lg:hidden">
+                      <Image
+                        src="/assets/logo/aiorreal_logo.jpg"
+                        alt="AI or Real Logo"
+                        width={40}
+                        height={40}
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Form card */}
+                  <div className="relative rounded-2xl overflow-hidden" style={{ background: "rgba(15, 23, 42, 0.85)", backdropFilter: "blur(20px)", border: "1px solid rgba(255, 255, 255, 0.08)", boxShadow: "0 25px 80px rgba(0, 0, 0, 0.5)" }}>
+                    {/* Red accent line at top */}
+                    <div className="h-1 w-full bg-gradient-to-r from-[#ff4655] via-[#ff4655] to-[#00eeff]" />
+
+                    {/* Header */}
+                    <div className="px-8 pt-8 pb-2">
+                      <m.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        <h2 className="text-2xl sm:text-3xl font-black text-white mb-1">
+                          Play The Game
+                        </h2>
+                        <p className="text-sm text-white/40 font-medium">
+                          Can you tell AI from reality? Enter your details to start.
+                        </p>
+                      </m.div>
+                    </div>
+
+                    {/* Form fields */}
+                    <div className="px-8 py-6 space-y-5">
+                      {/* Username */}
+                      <m.div
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-white/50 mb-2">
+                          Your Name
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && startGame()}
+                            placeholder="Enter your name..."
+                            maxLength={20}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-[#ff4655]/60 focus:ring-2 focus:ring-[#ff4655]/20 transition-all text-sm hover:border-white/20"
+                          />
+                        </div>
+                      </m.div>
+
+                      {/* Country */}
+                      <m.div
+                        ref={countryDropdownRef}
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-white/50 mb-2">
+                          Country <span className="text-white/25 normal-case">(Optional)</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <input
+                            type="text"
+                            value={countrySearch}
+                            onChange={(e) => {
+                              setCountrySearch(e.target.value);
+                              setShowCountryDropdown(true);
+                            }}
+                            onFocus={() => setShowCountryDropdown(true)}
+                            placeholder="Search country..."
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-[#ff4655]/60 focus:ring-2 focus:ring-[#ff4655]/20 transition-all text-sm hover:border-white/20"
+                          />
+                          {country &&
+                            countries.find((c) => c.name === country)?.code && (
+                              <m.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2"
+                              >
+                                <span className="text-lg">
+                                  {
+                                    countries.find((c) => c.name === country)
+                                      ?.flag
+                                  }
+                                </span>
+                              </m.span>
+                            )}
+
+                          {showCountryDropdown && (
+                            <m.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="absolute z-50 mt-2 w-full max-h-48 overflow-y-auto bg-[#0f172a]/95 backdrop-blur-xl border border-white/15 rounded-xl shadow-2xl"
+                              style={{
+                                boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
+                              }}
+                            >
+                              {filteredCountries.length === 0 ? (
+                                <div className="px-4 py-3 text-xs text-white/30 text-center">
+                                  No countries found
+                                </div>
+                              ) : (
+                                filteredCountries.map((c) => (
+                                  <button
+                                    key={c.code}
+                                    type="button"
+                                    onClick={() => selectCountry(c)}
+                                    className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-colors text-left cursor-pointer border-b border-white/5 last:border-0 ${country === c.name ? "bg-[#00eeff]/15 border-l-2 border-l-[#00eeff]" : ""}`}
+                                  >
+                                    <span className="inline-block text-base">
+                                      {c.flag}
+                                    </span>
+                                    <span className="text-sm text-white/90 font-medium">
+                                      {c.name}
+                                    </span>
+                                    <span className="text-[10px] text-white/30 ml-auto font-bold uppercase">
+                                      {c.code}
+                                    </span>
+                                  </button>
+                                ))
+                              )}
+                            </m.div>
+                          )}
+                        </div>
+                      </m.div>
+
+                      {/* Start button */}
+                      <m.button
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        whileHover={{
+                          scale: username.trim() ? 1.02 : 1,
+                          y: username.trim() ? -2 : 0,
+                        }}
+                        whileTap={{ scale: username.trim() ? 0.98 : 1 }}
+                        onClick={startGame}
+                        disabled={!username.trim()}
+                        className="w-full py-4 font-black uppercase tracking-[0.15em] text-sm rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer overflow-hidden relative group"
                         style={{
-                          background: "rgba(255, 70, 85, 0.15)",
-                          border: "1px solid rgba(255, 70, 85, 0.3)",
-                          boxShadow: "0 0 20px rgba(255, 70, 85, 0.1)",
+                          background: username.trim()
+                            ? "#ff4655"
+                            : "rgba(255,255,255,0.05)",
+                          boxShadow: username.trim()
+                            ? "0 4px 25px rgba(255, 70, 85, 0.3)"
+                            : "none",
                         }}
                       >
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ff4655] opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ff4655]" />
-                        </span>
-                        <span className="text-[9px] font-black uppercase tracking-[0.25em] text-[#ff4655]">
-                          Player Registration
-                        </span>
-                      </m.div>
-                      <m.h2
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-3xl sm:text-4xl font-black mb-2"
-                      >
-                        <span className="gradient-text">Play The Game</span>
-                      </m.h2>
-                      <m.p
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-xs text-white/40 mt-2 font-bold uppercase tracking-wider"
-                      >
-                        Can you tell AI from reality?
-                      </m.p>
-                    </div>
-                  </div>
-
-                  <div className="p-6 pt-4 space-y-5">
-                    {/* Username */}
-                    <m.div
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      <label className="block text-[10px] font-black uppercase tracking-[0.25em] text-white/50 mb-3 flex items-center gap-2">
-                        <svg
-                          className="w-3.5 h-3.5 text-[#00eeff]"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                        Your Name
-                      </label>
-                      <div className="relative group">
-                        <input
-                          type="text"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && startGame()}
-                          placeholder="Enter your name..."
-                          maxLength={20}
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-4 text-white placeholder-white/20 focus:outline-none focus:border-[#00eeff]/60 focus:ring-2 focus:ring-[#00eeff]/30 transition-all text-sm clip-tactical-sm hover:bg-white/8 hover:border-white/20"
-                          style={{
-                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-                          }}
-                        />
-                        <div
-                          className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, rgba(0, 238, 255, 0.05), transparent)",
-                          }}
-                        />
-                      </div>
-                    </m.div>
-
-                    {/* Country - searchable dropdown */}
-                    <m.div
-                      ref={countryDropdownRef}
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.5 }}
-                    >
-                      <label className="block text-[10px] font-black uppercase tracking-[0.25em] text-white/50 mb-3 flex items-center gap-2">
-                        <svg
-                          className="w-3.5 h-3.5 text-[#ff4655]"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        Country (Optional)
-                      </label>
-                      <div className="relative group">
-                        <input
-                          type="text"
-                          value={countrySearch}
-                          onChange={(e) => {
-                            setCountrySearch(e.target.value);
-                            setShowCountryDropdown(true);
-                          }}
-                          onFocus={() => setShowCountryDropdown(true)}
-                          placeholder="Search country..."
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-4 text-white placeholder-white/20 focus:outline-none focus:border-[#ff4655]/60 focus:ring-2 focus:ring-[#ff4655]/30 transition-all text-sm clip-tactical-sm hover:bg-white/8 hover:border-white/20"
-                          style={{
-                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-                          }}
-                        />
-                        {country &&
-                          countries.find((c) => c.name === country)?.code && (
-                            <m.span
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="absolute right-4 top-1/2 -translate-y-1/2"
-                            >
-                              <span className="text-lg">
-                                {
-                                  countries.find((c) => c.name === country)
-                                    ?.flag
-                                }
-                              </span>
-                            </m.span>
-                          )}
-                        <div
-                          className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, rgba(255, 70, 85, 0.05), transparent)",
-                          }}
-                        />
-
-                        {showCountryDropdown && (
-                          <m.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="absolute z-50 mt-2 w-full max-h-48 overflow-y-auto bg-[#0f172a]/95 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl clip-tactical-sm"
-                            style={{
-                              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
-                            }}
-                          >
-                            {filteredCountries.length === 0 ? (
-                              <div className="px-4 py-3 text-xs text-white/30 text-center">
-                                No countries found
-                              </div>
-                            ) : (
-                              filteredCountries.map((c) => (
-                                <button
-                                  key={c.code}
-                                  type="button"
-                                  onClick={() => selectCountry(c)}
-                                  className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-colors text-left cursor-pointer border-b border-white/5 last:border-0 ${country === c.name ? "bg-[#00eeff]/15 border-l-2 border-l-[#00eeff]" : ""}`}
-                                >
-                                  <span className="inline-block text-base">
-                                    {c.flag}
-                                  </span>
-                                  <span className="text-sm text-white/90 font-medium">
-                                    {c.name}
-                                  </span>
-                                  <span className="text-[10px] text-white/30 ml-auto font-bold uppercase">
-                                    {c.code}
-                                  </span>
-                                </button>
-                              ))
-                            )}
-                          </m.div>
-                        )}
-                      </div>
-                    </m.div>
-
-                    {/* Start button */}
-                    <m.button
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                      whileHover={{
-                        scale: username.trim() ? 1.03 : 1,
-                        y: username.trim() ? -2 : 0,
-                      }}
-                      whileTap={{ scale: username.trim() ? 0.97 : 1 }}
-                      onClick={startGame}
-                      disabled={!username.trim()}
-                      className="w-full py-5 font-black uppercase tracking-[0.15em] text-base transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer clip-skew overflow-hidden relative group"
-                      style={{
-                        background: username.trim()
-                          ? "linear-gradient(135deg, #ff4655, #00eeff)"
-                          : "rgba(255,255,255,0.05)",
-                        boxShadow: username.trim()
-                          ? "0 0 40px rgba(255, 70, 85, 0.3), 0 0 60px rgba(0, 238, 255, 0.2)"
-                          : "none",
-                      }}
-                    >
-                      {username.trim() && (
-                        <>
-                          <m.div
-                            animate={{ x: ["-100%", "200%"] }}
-                            transition={{
-                              duration: 2,
-                              repeat: Infinity,
-                              ease: "linear",
-                            }}
-                            className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"
-                          />
+                        {username.trim() && (
                           <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors pointer-events-none" />
-                        </>
-                      )}
-                      <span className="relative z-10 flex items-center justify-center gap-3">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.5}
-                            d="M13 10V3L4 14h7v7l9-11h-7z"
-                          />
-                        </svg>
-                        Start Game
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.5}
-                            d="M13 10V3L4 14h7v7l9-11h-7z"
-                          />
-                        </svg>
-                      </span>
-                    </m.button>
-                  </div>
-
-                  {/* Game info */}
-                  <div className="px-6 pb-6 pt-2">
-                    <div className="border-t border-white/10 pt-5">
-                      <m.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.7 }}
-                        className="grid grid-cols-3 gap-4 text-center"
-                      >
-                        {[
-                          {
-                            v: "12",
-                            l: "Images",
-                            c: "#00eeff",
-                            icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
-                          },
-                          {
-                            v: "2s",
-                            l: "Per Image",
-                            c: "#ff4655",
-                            icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
-                          },
-                          {
-                            v: "2",
-                            l: "Choices",
-                            c: "#10b981",
-                            icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
-                          },
-                        ].map((s, idx) => (
-                          <m.div
-                            key={s.l}
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.7 + idx * 0.1 }}
-                            whileHover={{ scale: 1.05, y: -3 }}
-                            className="clip-tactical-sm p-4 relative overflow-hidden group cursor-default"
-                            style={{
-                              background: `linear-gradient(135deg, ${s.c}12, ${s.c}05)`,
-                              border: `1px solid ${s.c}30`,
-                              boxShadow: `0 4px 15px ${s.c}10`,
-                            }}
+                        )}
+                        <span className="relative z-10 flex items-center justify-center gap-3">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
                           >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                          Start Game
+                        </span>
+                      </m.button>
+                    </div>
+
+                    {/* Game info stats */}
+                    <div className="px-8 pb-8 pt-2">
+                      <div className="border-t border-white/8 pt-5">
+                        <div className="grid grid-cols-3 gap-3 text-center">
+                          {[
+                            { v: "12", l: "Images", c: "#00eeff" },
+                            { v: "2s", l: "Per Image", c: "#ff4655" },
+                            { v: "2", l: "Choices", c: "#10b981" },
+                          ].map((s) => (
                             <div
-                              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                              key={s.l}
+                              className="py-3 px-2 rounded-lg"
                               style={{
                                 background: `linear-gradient(135deg, ${s.c}08, transparent)`,
+                                border: `1px solid ${s.c}20`,
                               }}
-                            />
-                            <svg
-                              className="w-5 h-5 mx-auto mb-2 opacity-60"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke={s.c}
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d={s.icon}
-                              />
-                            </svg>
-                            <div
-                              className="text-2xl font-black mb-1"
-                              style={{ color: s.c }}
-                            >
-                              {s.v}
+                              <div
+                                className="text-xl font-black"
+                                style={{ color: s.c }}
+                              >
+                                {s.v}
+                              </div>
+                              <div className="text-[9px] text-white/35 font-bold uppercase tracking-wider mt-0.5">
+                                {s.l}
+                              </div>
                             </div>
-                            <div className="text-[9px] text-white/40 font-black uppercase tracking-wider">
-                              {s.l}
-                            </div>
-                          </m.div>
-                        ))}
-                      </m.div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </m.div>
+                </m.div>
+              </div>
             </m.div>
           )}
 
