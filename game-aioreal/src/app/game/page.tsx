@@ -161,7 +161,7 @@ export default function GamePage() {
         });
       });
 
-      // Preload audio with progress tracking
+      // Preload audio (non-blocking — don't wait for full download)
       const audioFiles = [
         "/assets/sounds/music/music-game.mp3",
         "/assets/sounds/music/music-victory.mp3",
@@ -177,26 +177,16 @@ export default function GamePage() {
         "/assets/sounds/sfx/whoosh.mp3",
       ];
 
-      const audioPromise = new Promise<void>((resolve) => {
-        if (audioFiles.length === 0) {
-          resolve();
-          return;
-        }
-        let loaded = 0;
-        audioFiles.forEach((src) => {
-          const audio = new Audio();
-          audio.preload = "auto";
-          audio.oncanplaythrough = audio.onerror = () => {
-            loaded++;
-            updateProgress();
-            if (loaded >= audioFiles.length) resolve();
-          };
-          audio.src = src;
-        });
+      // Fire-and-forget audio preload — just kick off fetch, don't block on it
+      audioFiles.forEach((src) => {
+        const audio = new Audio();
+        audio.preload = "auto";
+        audio.src = src;
+        updateProgress(); // Count immediately since audio loads in background
       });
 
-      // Wait for both images and audio to finish loading
-      await Promise.all([imagePromise, audioPromise]);
+      // Only wait for images (the critical asset)
+      await imagePromise;
 
       setPhase("countdown");
       setCountdownNum(3);
@@ -402,12 +392,12 @@ export default function GamePage() {
     ((currentIndex + (phase === "feedback" ? 1 : 0)) / images.length) * 100;
   const timerPercent = (timeLeft / TIME_PER_IMAGE) * 100;
   const timerColor =
-    timeLeft > 3 ? "#00eeff" : timeLeft > 1.5 ? "#f59e0b" : "#ff4655";
-  const isTimerCritical = timeLeft <= 1.5;
+    timeLeft > 1.2 ? "#00eeff" : timeLeft > 0.6 ? "#f59e0b" : "#ff4655";
+  const isTimerCritical = timeLeft <= 0.6;
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <div className="min-h-screen bg-[#020617] text-slate-50 overflow-hidden relative">
+      <div className="min-h-dvh bg-[#020617] text-slate-50 overflow-hidden relative">
         {/* Tactical background */}
         <div className="fixed inset-0 z-0">
           <div className="absolute inset-0 opacity-20 mix-blend-overlay">
@@ -456,7 +446,7 @@ export default function GamePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative z-10 min-h-screen flex items-center justify-center px-4"
+              className="relative z-10 min-h-dvh flex items-center justify-center px-4"
             >
               <m.div
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -891,7 +881,7 @@ export default function GamePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative z-10 min-h-screen flex items-center justify-center"
+              className="relative z-10 min-h-dvh flex items-center justify-center"
             >
               <div className="text-center w-full max-w-xs">
                 <div
@@ -936,7 +926,7 @@ export default function GamePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative z-10 min-h-screen flex items-center justify-center"
+              className="relative z-10 min-h-dvh flex items-center justify-center"
             >
               <div className="text-center">
                 <AnimatePresence mode="wait">
@@ -983,10 +973,10 @@ export default function GamePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative z-10 min-h-screen flex flex-col"
+              className="relative z-10 h-dvh flex flex-col overflow-hidden"
             >
               {/* Top HUD bar */}
-              <div className="relative px-4 sm:px-8 py-3">
+              <div className="relative px-4 sm:px-8 py-2 sm:py-3 shrink-0">
                 <div className="absolute inset-0 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5" />
                 <div className="relative z-10 max-w-4xl mx-auto">
                   {/* Score + Image counter + Streak */}
@@ -1127,15 +1117,15 @@ export default function GamePage() {
               </div>
 
               {/* Image + Buttons area */}
-              <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4">
-                <div className="w-full max-w-sm">
-                  {/* PORTRAIT Image container (3:4 ratio = 768x1024) */}
+              <div className="flex-1 flex flex-col items-center justify-center px-4 pb-2 sm:pb-4 min-h-0">
+                <div className="w-full max-w-sm flex flex-col min-h-0 h-full justify-center">
+                  {/* PORTRAIT Image container - scales to fit available space */}
                   <m.div
                     key={currentImage.id}
                     initial={{ opacity: 0, scale: 1.05, rotateY: 10 }}
                     animate={{ opacity: 1, scale: 1, rotateY: 0 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="relative w-full portrait-image rounded-2xl overflow-hidden mb-5 clip-tactical"
+                    className="relative w-full portrait-image rounded-2xl overflow-hidden mb-2 sm:mb-4 clip-tactical max-h-[50dvh] sm:max-h-[55dvh]"
                     style={{
                       border: "1px solid rgba(255,255,255,0.08)",
                       boxShadow: `0 0 60px rgba(0,0,0,0.6), inset 0 0 60px rgba(0,0,0,0.2)`,
@@ -1233,7 +1223,7 @@ export default function GamePage() {
                                 bounce: 0.6,
                                 delay: 0.1,
                               }}
-                              className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 ${feedback.correct ? "bg-emerald-500" : "bg-red-500"}`}
+                              className={`w-14 h-14 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 ${feedback.correct ? "bg-emerald-500" : "bg-red-500"}`}
                               style={{
                                 boxShadow: feedback.correct
                                   ? "0 0 40px rgba(16, 185, 129, 0.5)"
@@ -1242,7 +1232,7 @@ export default function GamePage() {
                             >
                               {feedback.correct ? (
                                 <svg
-                                  className="w-10 h-10 text-white"
+                                  className="w-7 h-7 sm:w-10 sm:h-10 text-white"
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -1256,7 +1246,7 @@ export default function GamePage() {
                                 </svg>
                               ) : (
                                 <svg
-                                  className="w-10 h-10 text-white"
+                                  className="w-7 h-7 sm:w-10 sm:h-10 text-white"
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -1270,10 +1260,10 @@ export default function GamePage() {
                                 </svg>
                               )}
                             </m.div>
-                            <p className="text-white font-black text-xl uppercase tracking-wider drop-shadow-lg">
+                            <p className="text-white font-black text-base sm:text-xl uppercase tracking-wider drop-shadow-lg">
                               {feedback.correct ? "Correct!" : "Wrong!"}
                             </p>
-                            <p className="text-white/70 text-sm mt-1 font-bold">
+                            <p className="text-white/70 text-xs sm:text-sm mt-1 font-bold">
                               This was{" "}
                               <span
                                 className={
@@ -1292,7 +1282,7 @@ export default function GamePage() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 }}
-                                className="text-emerald-300 font-black text-lg mt-2"
+                                className="text-emerald-300 font-black text-sm sm:text-lg mt-1 sm:mt-2"
                               >
                                 +{lastPoints} pts
                               </m.p>
@@ -1320,7 +1310,7 @@ export default function GamePage() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 }}
-                      className="grid grid-cols-2 gap-4"
+                      className="grid grid-cols-2 gap-3 sm:gap-4 shrink-0"
                     >
                       <m.button
                         whileHover={{ scale: 1.06, y: -5 }}
@@ -1329,7 +1319,7 @@ export default function GamePage() {
                           playClick();
                           handleAnswer(true);
                         }}
-                        className="py-6 font-black uppercase tracking-[0.12em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
+                        className="py-4 sm:py-6 font-black uppercase tracking-[0.12em] text-xs sm:text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
                         style={{
                           background:
                             "linear-gradient(135deg, rgba(255, 70, 85, 0.18), rgba(255, 70, 85, 0.08))",
@@ -1354,9 +1344,9 @@ export default function GamePage() {
                           transition={{ duration: 2, repeat: Infinity }}
                           className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#ff4655] to-transparent opacity-50"
                         />
-                        <span className="relative z-10 flex flex-col items-center justify-center gap-2">
+                        <span className="relative z-10 flex flex-col items-center justify-center gap-1 sm:gap-2">
                           <svg
-                            className="w-7 h-7"
+                            className="w-5 h-5 sm:w-7 sm:h-7"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1379,7 +1369,7 @@ export default function GamePage() {
                           playClick();
                           handleAnswer(false);
                         }}
-                        className="py-6 font-black uppercase tracking-[0.12em] text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
+                        className="py-4 sm:py-6 font-black uppercase tracking-[0.12em] text-xs sm:text-sm transition-all cursor-pointer clip-tactical-sm overflow-hidden relative group"
                         style={{
                           background:
                             "linear-gradient(135deg, rgba(0, 238, 255, 0.18), rgba(0, 238, 255, 0.08))",
@@ -1408,9 +1398,9 @@ export default function GamePage() {
                           }}
                           className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#00eeff] to-transparent opacity-50"
                         />
-                        <span className="relative z-10 flex flex-col items-center justify-center gap-2">
+                        <span className="relative z-10 flex flex-col items-center justify-center gap-1 sm:gap-2">
                           <svg
-                            className="w-7 h-7"
+                            className="w-5 h-5 sm:w-7 sm:h-7"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1452,7 +1442,7 @@ export default function GamePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative z-10 min-h-screen flex items-center justify-center px-4 py-8"
+              className="relative z-10 min-h-dvh flex items-center justify-center px-4 py-8"
             >
               <GameOverCard
                 username={username}
