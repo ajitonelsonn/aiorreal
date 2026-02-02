@@ -7,7 +7,7 @@ import Link from "next/link";
 import GameOverCard from "../components/GameOverCard";
 import { useMusic } from "../components/MusicProvider";
 import { useSfx } from "../hooks/useSfx";
-import FlagIcon from "../components/FlagIcon";
+
 
 interface GameImage {
   id: string;
@@ -670,10 +670,9 @@ export default function GamePage() {
                             animate={{ scale: 1 }}
                             className="absolute right-4 top-1/2 -translate-y-1/2"
                           >
-                            <FlagIcon 
-                              countryCode={countries.find((c) => c.name === country)?.code || ""} 
-                              size={24} 
-                            />
+                            <span className="text-lg">
+                              {countries.find((c) => c.name === country)?.flag}
+                            </span>
                           </m.span>
                         )}
                         <div
@@ -699,18 +698,15 @@ export default function GamePage() {
                                 No countries found
                               </div>
                             ) : (
-                              filteredCountries.map((c, idx) => (
-                                <m.button
+                              filteredCountries.map((c) => (
+                                <button
                                   key={c.code}
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: idx * 0.02 }}
                                   type="button"
                                   onClick={() => selectCountry(c)}
-                                  className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all text-left cursor-pointer border-b border-white/5 last:border-0 ${country === c.name ? "bg-[#00eeff]/15 border-l-2 border-l-[#00eeff]" : ""}`}
+                                  className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-colors text-left cursor-pointer border-b border-white/5 last:border-0 ${country === c.name ? "bg-[#00eeff]/15 border-l-2 border-l-[#00eeff]" : ""}`}
                                 >
-                                  <span className="inline-block">
-                                    <FlagIcon countryCode={c.code} size={20} />
+                                  <span className="inline-block text-base">
+                                    {c.flag}
                                   </span>
                                   <span className="text-sm text-white/90 font-medium">
                                     {c.name}
@@ -718,7 +714,7 @@ export default function GamePage() {
                                   <span className="text-[10px] text-white/30 ml-auto font-bold uppercase">
                                     {c.code}
                                   </span>
-                                </m.button>
+                                </button>
                               ))
                             )}
                           </m.div>
