@@ -8,7 +8,6 @@ import GameOverCard from "../components/GameOverCard";
 import { useMusic } from "../components/MusicProvider";
 import { useSfx } from "../hooks/useSfx";
 
-
 interface GameImage {
   id: string;
   url: string;
@@ -664,17 +663,21 @@ export default function GamePage() {
                             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
                           }}
                         />
-                        {country && countries.find((c) => c.name === country)?.code && (
-                          <m.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2"
-                          >
-                            <span className="text-lg">
-                              {countries.find((c) => c.name === country)?.flag}
-                            </span>
-                          </m.span>
-                        )}
+                        {country &&
+                          countries.find((c) => c.name === country)?.code && (
+                            <m.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="absolute right-4 top-1/2 -translate-y-1/2"
+                            >
+                              <span className="text-lg">
+                                {
+                                  countries.find((c) => c.name === country)
+                                    ?.flag
+                                }
+                              </span>
+                            </m.span>
+                          )}
                         <div
                           className="absolute inset-0 rounded-lg opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"
                           style={{
@@ -897,7 +900,7 @@ export default function GamePage() {
                 </div>
 
                 <p className="text-sm text-white/40 font-bold uppercase tracking-widest mb-6">
-                  Downloading images...
+                  Loading Game Resources...
                 </p>
 
                 <div className="h-2 bg-white/5 rounded-full overflow-hidden mb-3 clip-tactical-sm">
