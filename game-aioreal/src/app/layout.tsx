@@ -6,10 +6,29 @@ export const metadata: Metadata = {
   title: "AI or Real? - Can You Tell The Difference?",
   description:
     "A fast-paced mini-game where you guess if images are AI-generated or real photographs. Built for the Cloud9 x JetBrains Hackathon.",
+  metadataBase: new URL("https://www.aiorreal.fun"),
   openGraph: {
-    title: "AI or Real?",
-    description: "Can you tell AI from reality? Test your skills in this fast-paced image game!",
+    title: "AI or Real? - Can You Tell The Difference?",
+    description:
+      "Can you tell AI from reality? Test your skills in this fast-paced image guessing game! Built for the Cloud9 x JetBrains Hackathon.",
     siteName: "AI or Real?",
+    url: "https://www.aiorreal.fun",
+    type: "website",
+    images: [
+      {
+        url: "/ss/landing.png",
+        width: 1200,
+        height: 630,
+        alt: "AI or Real? - Can You Tell The Difference?",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI or Real? - Can You Tell The Difference?",
+    description:
+      "Can you tell AI from reality? Test your skills in this fast-paced image guessing game!",
+    images: ["/ss/landing.png"],
   },
 };
 
