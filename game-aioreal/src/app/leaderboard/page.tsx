@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -33,6 +33,7 @@ export default function LeaderboardPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [newEntryIndex, setNewEntryIndex] = useState<number | null>(null);
+  const entriesRef = useRef<LeaderboardEntry[]>([]);
 
   const fetchData = useCallback(
     async (isInitial = false) => {
@@ -49,19 +50,15 @@ export default function LeaderboardPage() {
         }
 
         const newEntries: LeaderboardEntry[] = lb.leaderboard || [];
+        const prev = entriesRef.current;
 
         // Detect new entries by comparing with previous
-        if (
-          !isInitial &&
-          entries.length > 0 &&
-          newEntries.length > entries.length
-        ) {
-          // Find first new entry
-          const prevUsernames = new Set(
-            entries.map((e) => `${e.username}-${e.createdAt}`),
+        if (!isInitial && prev.length > 0 && newEntries.length > prev.length) {
+          const prevKeys = new Set(
+            prev.map((e) => `${e.username}-${e.createdAt}`),
           );
           const idx = newEntries.findIndex(
-            (e) => !prevUsernames.has(`${e.username}-${e.createdAt}`),
+            (e: LeaderboardEntry) => !prevKeys.has(`${e.username}-${e.createdAt}`),
           );
           if (idx >= 0) {
             setNewEntryIndex(idx);
@@ -69,6 +66,7 @@ export default function LeaderboardPage() {
           }
         }
 
+        entriesRef.current = newEntries;
         setEntries(newEntries);
         setLastUpdated(new Date());
         if (isInitial) setLoading(false);
@@ -77,7 +75,7 @@ export default function LeaderboardPage() {
       }
       setIsRefreshing(false);
     },
-    [entries],
+    [],
   );
 
   // Initial load
@@ -319,7 +317,7 @@ export default function LeaderboardPage() {
                 <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">
                   Auto-Refresh
                 </span>
-                <span className="text-sm font-black text-[#ff4655]">30s</span>
+                <span className="text-sm font-black text-[#ff4655]">5s</span>
               </div>
             </m.div>
           )}

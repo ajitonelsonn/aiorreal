@@ -387,7 +387,7 @@ export default function GalleryPage() {
             <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 pb-12"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-12"
             >
               {items.map((item, index) => {
                 const grade = getGrade(item.score);
@@ -397,7 +397,7 @@ export default function GalleryPage() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(index * 0.04, 0.8) }}
-                    className="break-inside-avoid mb-4 group cursor-pointer"
+                    className="group cursor-pointer"
                     onClick={() => setSelectedItem(item)}
                   >
                     <div
