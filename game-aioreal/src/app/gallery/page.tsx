@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,6 +29,23 @@ export default function GalleryPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
+  const clickSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    clickSoundRef.current = new Audio("/assets/sounds/sfx/click.mp3");
+    clickSoundRef.current.volume = 0.3;
+  }, []);
+
+  useEffect(() => {
+    const handleClick = () => {
+      if (clickSoundRef.current) {
+        clickSoundRef.current.currentTime = 0;
+        clickSoundRef.current.play().catch(() => {});
+      }
+    };
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
+  }, []);
 
   const fetchData = useCallback(async (isInitial = false) => {
     if (!isInitial) setIsRefreshing(true);

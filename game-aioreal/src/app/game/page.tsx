@@ -95,6 +95,14 @@ export default function GamePage() {
       .catch(console.error);
   }, []);
 
+  // Preload all hero images on mount so slideshow transitions are instant
+  useEffect(() => {
+    HEROES.forEach((hero) => {
+      const img = new window.Image();
+      img.src = hero.src;
+    });
+  }, []);
+
   // Cycle hero images every 5 seconds during register phase
   useEffect(() => {
     if (phase !== "register") return;
@@ -466,14 +474,14 @@ export default function GamePage() {
               <div
                 className="absolute top-0 right-0 w-1/2 h-full pointer-events-none hidden lg:block"
                 style={{
-                  background: "linear-gradient(135deg, transparent 40%, rgba(255, 70, 85, 0.15) 60%, rgba(255, 70, 85, 0.25) 100%)",
+                  background:
+                    "linear-gradient(135deg, transparent 40%, rgba(255, 70, 85, 0.15) 60%, rgba(255, 70, 85, 0.25) 100%)",
                   clipPath: "polygon(30% 0, 100% 0, 100% 100%, 10% 100%)",
                 }}
               />
 
               {/* Split layout container */}
               <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center min-h-dvh lg:min-h-0 px-4 py-8 lg:py-0 gap-0 lg:gap-8">
-
                 {/* Left side — Jett character (hidden on mobile, shown on lg+) */}
                 <m.div
                   initial={{ opacity: 0, x: -60 }}
@@ -522,8 +530,12 @@ export default function GamePage() {
                           />
                         </div>
                         <div>
-                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#00eeff]">AI or Real?</p>
-                          <p className="text-[8px] text-white/30 font-bold uppercase tracking-wider">Cloud9 x JetBrains</p>
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#00eeff]">
+                            AI or Real?
+                          </p>
+                          <p className="text-[8px] text-white/30 font-bold uppercase tracking-wider">
+                            Cloud9 x JetBrains
+                          </p>
                         </div>
                       </div>
                     </m.div>
@@ -569,7 +581,15 @@ export default function GamePage() {
                   </div>
 
                   {/* Form card */}
-                  <div className="relative rounded-2xl overflow-hidden" style={{ background: "rgba(15, 23, 42, 0.85)", backdropFilter: "blur(20px)", border: "1px solid rgba(255, 255, 255, 0.08)", boxShadow: "0 25px 80px rgba(0, 0, 0, 0.5)" }}>
+                  <div
+                    className="relative rounded-2xl overflow-hidden"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.85)",
+                      backdropFilter: "blur(20px)",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      boxShadow: "0 25px 80px rgba(0, 0, 0, 0.5)",
+                    }}
+                  >
                     {/* Red accent line at top */}
                     <div className="h-1 w-full bg-gradient-to-r from-[#ff4655] via-[#ff4655] to-[#00eeff]" />
 
@@ -584,7 +604,8 @@ export default function GamePage() {
                           Play The Game
                         </h2>
                         <p className="text-sm text-white/40 font-medium">
-                          Can you tell AI from reality? Enter your details to start.
+                          Can you tell AI from reality? Enter your details to
+                          start.
                         </p>
                       </m.div>
                     </div>
@@ -602,8 +623,18 @@ export default function GamePage() {
                         </label>
                         <div className="relative">
                           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
                             </svg>
                           </div>
                           <input
@@ -626,12 +657,25 @@ export default function GamePage() {
                         transition={{ delay: 0.4 }}
                       >
                         <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-white/50 mb-2">
-                          Country <span className="text-white/25 normal-case">(Optional)</span>
+                          Country{" "}
+                          <span className="text-white/25 normal-case">
+                            (Optional)
+                          </span>
                         </label>
                         <div className="relative">
                           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
                             </svg>
                           </div>
                           <input

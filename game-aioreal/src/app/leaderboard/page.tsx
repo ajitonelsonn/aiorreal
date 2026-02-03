@@ -34,6 +34,23 @@ export default function LeaderboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [newEntryIndex, setNewEntryIndex] = useState<number | null>(null);
   const entriesRef = useRef<LeaderboardEntry[]>([]);
+  const clickSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    clickSoundRef.current = new Audio("/assets/sounds/sfx/click.mp3");
+    clickSoundRef.current.volume = 0.3;
+  }, []);
+
+  useEffect(() => {
+    const handleClick = () => {
+      if (clickSoundRef.current) {
+        clickSoundRef.current.currentTime = 0;
+        clickSoundRef.current.play().catch(() => {});
+      }
+    };
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
+  }, []);
 
   const fetchData = useCallback(
     async (isInitial = false) => {

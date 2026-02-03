@@ -1,12 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function Home() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const clickSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    clickSoundRef.current = new Audio("/assets/sounds/sfx/click.mp3");
+    clickSoundRef.current.volume = 0.3;
+  }, []);
+
+  useEffect(() => {
+    const handleClick = () => {
+      if (clickSoundRef.current) {
+        clickSoundRef.current.currentTime = 0;
+        clickSoundRef.current.play().catch(() => {});
+      }
+    };
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
+  }, []);
 
   useEffect(() => {
     const handleMouse = (e: MouseEvent) => {
